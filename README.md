@@ -59,6 +59,14 @@ Daftar akun di `/register`, lalu buat sesi di `/dashboard`.
    SQL Editor project Supabase — tidak dijalankan otomatis oleh Vercel.
    **DDL dulu, baru deploy kode**: kalau kode versi baru jalan di atas skema
    lama, insert tamu adhoc akan gagal `42501`.
+6. **Batas kirim email**: provider email bawaan Supabase hanya mengirim **2
+   email per jam per project** (kuota bersama untuk signup, resend, dan reset
+   password) dan hanya ke alamat anggota organisasi. Lewat dari itu signup
+   gagal dengan `429 over_email_send_rate_limit` — aplikasi menampilkannya
+   sebagai "Batas kirim email Supabase tercapai". Ini batas Supabase, bukan
+   bug aplikasi. Untuk produksi, pasang **custom SMTP** di
+   **Authentication → SMTP Settings**; batasnya lalu bisa diatur di
+   **Authentication → Rate Limits**.
 
 ## Arsitektur
 
