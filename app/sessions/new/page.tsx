@@ -17,6 +17,13 @@ interface DraftCourt {
   name: string;
   price: number;
 }
+/** Draft kok: dibeli per slope, isi slope menentukan harga per butir. */
+interface DraftKok {
+  id: string;
+  name: string;
+  packPrice: number;
+  packSize: number;
+}
 interface DraftAdd {
   id: string;
   name: string;
@@ -51,9 +58,10 @@ export default function NewSessionPage() {
   const [players, setPlayers] = useState<string[]>([]);
   const [playerName, setPlayerName] = useState("");
 
-  const [shuttles, setShuttles] = useState<DraftCourt[]>([]);
+  const [shuttles, setShuttles] = useState<DraftKok[]>([]);
   const [shuttleName, setShuttleName] = useState("");
   const [shuttlePrice, setShuttlePrice] = useState("");
+  const [shuttleSize, setShuttleSize] = useState("12");
 
   const [adds, setAdds] = useState<DraftAdd[]>([]);
   const [addName, setAddName] = useState("");
@@ -80,7 +88,9 @@ export default function NewSessionPage() {
       shuttlecocks: shuttles.map((k) => ({
         id: k.id,
         name: k.name,
-        price: k.price,
+        packPrice: k.packPrice,
+        packSize: k.packSize,
+        used: 0,
         playerIds: [],
       })),
       additionalCosts: adds.map((a) => ({
@@ -118,6 +128,32 @@ export default function NewSessionPage() {
     setCourtPrice("");
   };
 
+  const addShuttle = () => {
+    const price = Number(shuttlePrice);
+    const size = Number(shuttleSize);
+    if (shuttlePrice.trim().length === 0 || Number.isNaN(price)) {
+      setError("Masukkan harga 1 slope kok terlebih dahulu");
+      return;
+    }
+    if (shuttleSize.trim().length === 0 || Number.isNaN(size) || size < 1) {
+      setError("Isi 1 slope minimal 1 butir");
+      return;
+    }
+    setError("");
+    setShuttles((k) => [
+      ...k,
+      {
+        id: makeId(),
+        name: shuttleName.trim() || `Kok #${k.length + 1}`,
+        packPrice: Math.round(price),
+        packSize: Math.round(size),
+      },
+    ]);
+    setShuttleName("");
+    setShuttlePrice("");
+    setShuttleSize("12");
+  };
+
   const create = async () => {
     if (name.trim().length === 0) {
       setError("Kasih nama sesi dulu ya");
@@ -136,7 +172,7 @@ export default function NewSessionPage() {
         notes: notes.trim() || undefined,
         playerNames: players.map((p) => p.trim()).filter((p) => p.length > 0),
         courts: courts.map((c) => ({ name: c.name, price: c.price })),
-        shuttlecocks: shuttles.map((k) => ({ name: k.name, price: k.price })),
+        shuttlecocks: shuttles.map((k) => ({ name: k.name, packPrice: k.packPrice, packSize: k.packSize })),
         additionalCosts: adds.map((a) => ({
           name: a.name,
           category: a.category,
@@ -268,17 +304,21 @@ export default function NewSessionPage() {
           <div>
             <div className="flex gap-2">
               <input value={shuttleName} onChange={(e) => setShuttleName(e.target.value)} placeholder="Nama kok" className={inputCls} />
-              <input value={shuttlePrice} onChange={(e) => setShuttlePrice(e.target.value)} placeholder="Harga" inputMode="numeric" className={`${inputCls} w-32`} />
-              <button onClick={() => { if (shuttlePrice.trim().length === 0 || Number.isNaN(Number(shuttlePrice))) { setError("Masukkan harga kok terlebih dahulu"); return; } setError(""); setShuttles((k) => [...k, { id: makeId(), name: shuttleName.trim() || `Kok #${k.length + 1}`, price: Number(shuttlePrice) }]); setShuttleName(""); setShuttlePrice(""); }} className={addBtn} aria-label="Tambah kok"><PlusIcon className="h-4 w-4" /></button>
+              <input value={shuttlePrice} onChange={(e) => setShuttlePrice(e.target.value)} placeholder="Harga 1 slope" inputMode="numeric" className={`${inputCls} w-36`} />
+              <input value={shuttleSize} onChange={(e) => setShuttleSize(e.target.value)} placeholder="Isi" inputMode="numeric" className={`${inputCls} w-20`} aria-label="Isi satu slope" />
+              <button onClick={addShuttle} className={addBtn} aria-label="Tambah kok"><PlusIcon className="h-4 w-4" /></button>
             </div>
+            <p className="mt-1.5 text-xs text-primary-dark/60">Masukkan harga <b>1 slope/tube utuh</b>, bukan harga per butir. Harga per butir dihitung otomatis.</p>
             <div className="mt-3 space-y-2">
               {shuttles.map((k) => (
                 <div key={k.id} className={itemCard}>
-                  <span className="font-medium">{k.name}</span>
-                  <span className="flex items-center gap-2 text-primary-dark">
-                    {formatIDR(k.price)}
-                    <button onClick={() => setShuttles((ks) => ks.filter((x) => x.id !== k.id))} className="text-coral" aria-label="Hapus kok"><XIcon className="h-4 w-4" /></button>
+                  <span className="font-medium">
+                    {k.name}
+                    <span className="ml-1.5 text-xs font-normal text-primary-dark/70">
+                      {formatIDR(k.packPrice)}/slope · isi {k.packSize} butir → {formatIDR(Math.round(k.packPrice / k.packSize))}/butir
+                    </span>
                   </span>
+                  <button onClick={() => setShuttles((ks) => ks.filter((x) => x.id !== k.id))} className="text-coral" aria-label="Hapus kok"><XIcon className="h-4 w-4" /></button>
                 </div>
               ))}
               {shuttles.length === 0 && <p className="text-sm text-primary-dark/60">Belum ada kok.</p>}
@@ -321,9 +361,9 @@ export default function NewSessionPage() {
               <div className="mt-3 space-y-1 text-sm text-primary-dark">
                 <div className="flex justify-between"><span>Total biaya</span><span className="font-extrabold text-primary-dark">{formatIDR(calc.totalCost)}</span></div>
                 <div className="flex justify-between"><span>{players.length} pemain</span><span className="font-semibold">{players.length > 0 ? formatIDR(Math.max(...Object.values(calc.perPlayer).map((p) => p.total), 0)) + " maks/orang" : "-"}</span></div>
-                {calc.unallocated > 0 && <p className="flex items-center gap-1.5 rounded-lg bg-accent-light/40 px-2 py-1 text-xs text-accent-dark"><AlertIcon className="h-4 w-4 shrink-0" /> {formatIDR(calc.unallocated)} belum terbagi (court/kok tanpa pemain — atur di halaman detail).</p>}
+                {calc.unallocated > 0 && <p className="flex items-center gap-1.5 rounded-lg bg-accent-light/40 px-2 py-1 text-xs text-accent-dark"><AlertIcon className="h-4 w-4 shrink-0" /> {formatIDR(calc.unallocated)} belum terbagi (lapangan/kok tanpa pemain — atur di halaman detail).</p>}
                 {courts.length > 0 && (
-                  <p className="flex items-center gap-1.5 rounded-lg bg-accent-light/40 px-2 py-1 text-xs text-accent-dark"><AlertIcon className="h-4 w-4 shrink-0" /> This court has no players — tugaskan pemain di halaman detail.</p>
+                  <p className="flex items-center gap-1.5 rounded-lg bg-accent-light/40 px-2 py-1 text-xs text-accent-dark"><AlertIcon className="h-4 w-4 shrink-0" /> Lapangan belum ditugaskan ke pemain — atur di halaman detail.</p>
                 )}
               </div>
             </div>
@@ -334,7 +374,7 @@ export default function NewSessionPage() {
                   <span className="font-semibold">{formatIDR(calc.perPlayer[`draft-p${i}`]?.total ?? 0)}</span>
                 </div>
               ))}
-              {players.length === 0 && <p className="text-sm text-primary-dark/60">Add at least one player to calculate payment.</p>}
+              {players.length === 0 && <p className="text-sm text-primary-dark/60">Tambahkan minimal satu pemain untuk menghitung tagihan.</p>}
             </div>
           </div>
         )}

@@ -26,7 +26,7 @@ const row: DbSessionRow = {
   share_code: "8FK29",
   player_ids: ["p1", "p2"],
   courts: [{ id: "c1", name: "Court 1", price: 120000, playerIds: ["p1", "p2"] }],
-  shuttlecocks: [{ id: "k1", name: "Kok A", price: 50000, playerIds: ["p1"] }],
+  shuttlecocks: [{ id: "k1", name: "Kok A", packPrice: 111000, packSize: 12, used: 2, playerIds: ["p1"] }],
   additional_costs: [{ id: "a1", name: "Parkir", category: "Parkir", amount: 10000 }],
   payments: { p1: "paid", p2: "pending" },
   payment_qr: null,
@@ -90,9 +90,16 @@ test("sanitizers coerce numbers and reject malformed payloads", () => {
   assert.deepEqual(sanitizeCourts([{ id: "c1", name: " Court 1 ", price: "120000", playerIds: ["p1"] }]), [
     { id: "c1", name: "Court 1", price: 120000, playerIds: ["p1"] },
   ]);
-  assert.deepEqual(sanitizeShuttles([{ id: "k1", name: "Kok", price: 50000.4, playerIds: [] }]), [
-    { id: "k1", name: "Kok", price: 50000, playerIds: [] },
+  assert.deepEqual(
+    sanitizeShuttles([{ id: "k1", name: "Kok", packPrice: "111000.4", packSize: "12", used: "2.6", playerIds: [] }]),
+    [{ id: "k1", name: "Kok", packPrice: 111000, packSize: 12, used: 3, playerIds: [] }],
+  );
+  // Field opsional absen: isi slope default 1, terpakai default 0.
+  assert.deepEqual(sanitizeShuttles([{ id: "k1", name: "Kok", packPrice: 9000 }]), [
+    { id: "k1", name: "Kok", packPrice: 9000, packSize: 1, used: 0, playerIds: [] },
   ]);
+  assert.throws(() => sanitizeShuttles([{ name: "Kok", packPrice: 9000, packSize: 0 }]));
+  assert.throws(() => sanitizeShuttles([{ name: "Kok", packPrice: -1, packSize: 12 }]));
   assert.throws(() => sanitizeCourts([{ id: "c1", name: "X", price: -1, playerIds: [] }]));
   assert.throws(() => sanitizeCourts("nope"));
   assert.throws(() => sanitizeAdds([{ id: "a1", name: "X", category: "Y", amount: NaN }]));

@@ -16,7 +16,7 @@ import {
   rowToUser,
   sanitizeAdds,
   sanitizeCourts,
-  sanitizeShuttles,
+  sanitizeShuttleDrafts,
   type DbProfileRow,
   type DbSessionRow,
 } from "@/lib/db";
@@ -54,6 +54,35 @@ function reqDraftItems(
       throw new BadRequest(`Harga ${key} tidak valid`);
     }
     return { name: name || key, price: Math.round(rawPrice) };
+  });
+}
+
+function reqDraftShuttles(
+  body: Record<string, unknown>,
+): { name: string; packPrice: number; packSize: number }[] {
+  const v = body.shuttlecocks;
+  if (!Array.isArray(v)) throw new BadRequest("shuttlecocks harus berupa array");
+  return v.map((item) => {
+    if (typeof item !== "object" || item === null) {
+      throw new BadRequest("shuttlecocks berisi item tidak valid");
+    }
+    const rec = item as Record<string, unknown>;
+    const num = (raw: unknown): number =>
+      typeof raw === "string" ? Number(raw) : (raw as number);
+    const name = typeof rec.name === "string" ? rec.name.trim() : "";
+    const packPrice = num(rec.packPrice);
+    if (typeof packPrice !== "number" || !Number.isFinite(packPrice) || packPrice < 0) {
+      throw new BadRequest("Harga 1 slope kok tidak valid");
+    }
+    const packSize = num(rec.packSize);
+    if (typeof packSize !== "number" || !Number.isFinite(packSize) || packSize < 1) {
+      throw new BadRequest("Isi 1 slope kok minimal 1 butir");
+    }
+    return {
+      name: name || "Kok",
+      packPrice: Math.round(packPrice),
+      packSize: Math.round(packSize),
+    };
   });
 }
 
@@ -145,15 +174,12 @@ export async function POST(request: Request) {
     const notes = optStr(body, "notes", 1000);
     const playerNames = reqPlayerNames(body);
     const draftCourts = reqDraftItems(body, "courts");
-    const draftShuttles = reqDraftItems(body, "shuttlecocks");
+    const shuttleList = sanitizeShuttleDrafts(reqDraftShuttles(body));
     const draftAdds = reqDraftAdds(body);
 
     // Buat tamu adhoc: playerNames[0] = kreator. Normalisasi sanitizer.
     const courtList = sanitizeCourts(
       draftCourts.map((c) => ({ name: c.name, price: c.price })),
-    );
-    const shuttleList = sanitizeShuttles(
-      draftShuttles.map((k) => ({ name: k.name, price: k.price })),
     );
     const addList = sanitizeAdds(
       draftAdds.map((a) => ({

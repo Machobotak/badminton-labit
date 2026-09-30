@@ -14,7 +14,7 @@ const base: Session = {
   shareCode: "8FK29",
   playerIds: ["p1", "p2"],
   courts: [{ id: "c1", name: "Court 1", price: 120000, playerIds: ["p1", "p2"] }],
-  shuttlecocks: [{ id: "k1", name: "Kok A", price: 50000, playerIds: ["p1"] }],
+  shuttlecocks: [{ id: "k1", name: "Kok A", packPrice: 111000, packSize: 12, used: 2, playerIds: ["p1"] }],
   additionalCosts: [{ id: "a1", name: "Parkir", category: "Parkir", amount: 10000 }],
   payments: { p1: "paid", p2: "pending" },
 };

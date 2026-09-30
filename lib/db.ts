@@ -52,6 +52,34 @@ export function rowToUser(
   return { id: r.id, name: r.name, ...(r.email ? { email: r.email } : {}) };
 }
 
+/**
+ * Baris jsonb dari DB selalu dianggap tak tepercaya (dan sesi lama masih
+ * menyimpan satu harga total, bukan harga slope). Semua bentuk dibaca
+ * toleran: slope utuh dianggap berisi 1 butir yang semuanya terpakai.
+ */
+function normalizeShuttleRows(v: unknown): Shuttle[] {
+  if (!Array.isArray(v)) return [];
+  return v.map((raw) => {
+    const o = (raw ?? {}) as Record<string, unknown>;
+    const num = (x: unknown, fallback: number): number =>
+      typeof x === "number" && Number.isFinite(x) ? x : fallback;
+    const hasPack = typeof o.packPrice === "number";
+    const packSize = Math.max(1, Math.round(num(o.packSize, 1)));
+    const legacyPrice = Math.max(0, num(o.price, 0));
+    return {
+      id: typeof o.id === "string" ? o.id : makeId(),
+      name: typeof o.name === "string" ? o.name : "Kok",
+      packPrice: hasPack ? Math.max(0, Math.round(num(o.packPrice, 0))) : legacyPrice,
+      packSize,
+      used: hasPack ? Math.max(0, Math.round(num(o.used, 0))) : packSize,
+      playerIds: Array.isArray(o.playerIds)
+        ? o.playerIds.filter((x): x is string => typeof x === "string")
+        : [],
+      ...(typeof o.paidBy === "string" && o.paidBy ? { paidBy: o.paidBy } : {}),
+    };
+  });
+}
+
 export function rowToSession(r: DbSessionRow): Session {
   return {
     id: r.id,
@@ -65,7 +93,7 @@ export function rowToSession(r: DbSessionRow): Session {
     shareCode: r.share_code,
     playerIds: r.player_ids ?? [],
     courts: Array.isArray(r.courts) ? r.courts : [],
-    shuttlecocks: Array.isArray(r.shuttlecocks) ? r.shuttlecocks : [],
+    shuttlecocks: normalizeShuttleRows(r.shuttlecocks),
     additionalCosts: Array.isArray(r.additional_costs)
       ? r.additional_costs
       : [],
@@ -115,6 +143,15 @@ function cleanStr(v: unknown, max = 200): string {
   return s;
 }
 
+/** Jumlah bulat ≥ 0; `fallback` dipakai saat field opsional kosong. */
+function cleanCount(v: unknown, fallback: number): number {
+  if (v === undefined || v === null || v === "") return fallback;
+  const n = typeof v === "string" ? Number(v) : v;
+  if (typeof n !== "number" || !Number.isFinite(n) || n < 0)
+    throw new Error("Jumlah harus angka ≥ 0");
+  return Math.round(n);
+}
+
 function cleanMoney(v: unknown): number {
   const n = typeof v === "string" ? Number(v) : v;
   if (typeof n !== "number" || !Number.isFinite(n) || n < 0)
@@ -149,20 +186,46 @@ export function sanitizeCourts(v: unknown): Court[] {
   });
 }
 
+/**
+ * Kok disimpan sebagai pembelian per slope, bukan harga total per item:
+ * `packPrice` = harga 1 slope, `packSize` = isi 1 slope, `used` = butir terpakai.
+ * Harga per butir dihitung `calculateSession`, tidak pernah disimpan.
+ */
 export function sanitizeShuttles(v: unknown): Shuttle[] {
   if (!Array.isArray(v)) throw new Error("Kok tidak valid");
   return v.map((k) => {
     const o = k as Record<string, unknown>;
+    const packSize = cleanCount(o.packSize, 1);
+    if (packSize < 1) throw new Error("Isi 1 slope minimal 1 butir");
     return {
       id: typeof o.id === "string" && o.id ? cleanId(o.id) : makeId(),
       name: cleanStr(o.name ?? "Kok baru", 120) || "Kok baru",
-      price: cleanMoney(o.price),
+      packPrice: cleanMoney(o.packPrice),
+      packSize,
+      used: cleanCount(o.used, 0),
       playerIds: Array.isArray(o.playerIds) ? cleanIdList(o.playerIds) : [],
       ...(typeof o.paidBy === "string" && o.paidBy
         ? { paidBy: cleanId(o.paidBy) }
         : {}),
     };
   });
+}
+
+/**
+ * Draft dari wizard "Buat Sesi": kok belum dipakai siapa pun, jadi
+ * `used` + `playerIds` diisi kosong oleh `sanitizeShuttles`.
+ */
+export function sanitizeShuttleDrafts(
+  draft: { name: string; packPrice: number; packSize: number }[],
+): Shuttle[] {
+  return sanitizeShuttles(
+    draft.map((k) => ({
+      name: k.name,
+      packPrice: k.packPrice,
+      packSize: k.packSize,
+      used: 0,
+    })),
+  );
 }
 
 export function sanitizeAdds(v: unknown): AddCost[] {

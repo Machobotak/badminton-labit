@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { calculateSession, formatIDR } from "../../../lib/calculation";
+import { calculateSession, formatIDR, shuttleItemCost, shuttleUnitPrice } from "../../../lib/calculation";
 import { formatDateID, timeRange } from "../../../lib/format";
 import type { Session } from "../../../lib/types";
 import { currentUser, removePlayer, togglePaid } from "../../../lib/mutations";
@@ -32,7 +32,11 @@ function DetailBody({ id }: { id: string }) {
   const [newCourtName, setNewCourtName] = useState("");
   const [newCourtPrice, setNewCourtPrice] = useState("");
   const [newKokName, setNewKokName] = useState("");
-  const [newKokPrice, setNewKokPrice] = useState("");
+  const [newKokPackPrice, setNewKokPackPrice] = useState("");
+  const [newKokPackSize, setNewKokPackSize] = useState("12");
+  const [editingKok, setEditingKok] = useState<string | null>(null);
+  const [kokPriceDraft, setKokPriceDraft] = useState("");
+  const [kokSizeDraft, setKokSizeDraft] = useState("");
   const [editingPrice, setEditingPrice] = useState<string | null>(null);
   const [priceDraft, setPriceDraft] = useState("");
   const [qrError, setQrError] = useState("");
@@ -155,9 +159,28 @@ function DetailBody({ id }: { id: string }) {
       const s = d.sessions.find((x) => x.id === id);
       const item = s?.[kind].find((x) => x.id === itemId);
       if (!item) return;
-      item.playerIds = item.playerIds.includes(pid)
+      const on = item.playerIds.includes(pid);
+      item.playerIds = on
         ? item.playerIds.filter((x) => x !== pid)
         : [...item.playerIds, pid];
+      // Kok: begitu pemain ditambah, butir terpakai dinaikkan ke rasio baku
+      // (1 slope isi 12 habis untuk 4 pemain → 2 butir/orang × n pemain).
+      // Tidak pernah diturunkan saat pemain dilepas: pemakaian itu fakta, bukan turunan.
+      if (!on && kind === "shuttlecocks" && "used" in item) {
+        item.used = Math.max(
+          item.used,
+          Math.round((item.packSize * item.playerIds.length) / 4),
+        );
+      }
+    });
+  };
+
+  const bumpKokUsed = (itemId: string, delta: number) => {
+    update((d) => {
+      const it = d.sessions
+        .find((x) => x.id === id)
+        ?.shuttlecocks.find((x) => x.id === itemId);
+      if (it) it.used = Math.max(0, it.used + delta);
     });
   };
 
@@ -195,7 +218,7 @@ function DetailBody({ id }: { id: string }) {
         })}
       </div>
       {item.playerIds.length === 0 && (
-        <p className="mt-1.5 flex items-center gap-1 text-xs font-medium text-coral"><AlertIcon className="h-3.5 w-3.5" /> This court has no players</p>
+        <p className="mt-1.5 flex items-center gap-1 text-xs font-medium text-coral"><AlertIcon className="h-3.5 w-3.5" /> Belum ada pemain di item ini</p>
       )}
       <div className="mt-2 flex items-center gap-2">
         <label className="text-xs text-primary-dark/70">Siapa yang nombok?</label>
@@ -287,7 +310,7 @@ function DetailBody({ id }: { id: string }) {
 
           {session.playerIds.length === 0 ? (
             <p className="rounded-lg bg-primary-bg p-4 text-center text-sm text-primary-dark/60">
-              Add at least one player to calculate payment.
+              Tambahkan minimal satu pemain untuk menghitung tagihan.
             </p>
           ) : (
             <div className="space-y-2">
@@ -357,7 +380,7 @@ function DetailBody({ id }: { id: string }) {
               </div>
             ))}
             {session.playerIds.length === 0 && (
-              <p className="text-sm text-primary-dark/60">Add at least one player to calculate payment.</p>
+              <p className="text-sm text-primary-dark/60">Tambahkan minimal satu pemain untuk menghitung tagihan.</p>
             )}
           </div>
         </div>
@@ -451,20 +474,27 @@ function DetailBody({ id }: { id: string }) {
         <div className="mt-4">
           <div className="flex gap-2">
             <input value={newKokName} onChange={(e) => setNewKokName(e.target.value)} placeholder="Nama kok" className={`${inputCls} w-full`} />
-            <input value={newKokPrice} onChange={(e) => setNewKokPrice(e.target.value)} placeholder="Harga" inputMode="numeric" className={`${inputCls} w-28`} />
+            <input value={newKokPackPrice} onChange={(e) => setNewKokPackPrice(e.target.value)} placeholder="Harga 1 slope" inputMode="numeric" className={`${inputCls} w-36`} />
+            <input value={newKokPackSize} onChange={(e) => setNewKokPackSize(e.target.value)} placeholder="Isi" inputMode="numeric" className={`${inputCls} w-20`} aria-label="Isi satu slope" />
             <button
               onClick={() => {
-                if (!newKokPrice.trim() || Number.isNaN(Number(newKokPrice))) return;
+                const price = Number(newKokPackPrice);
+                const size = Number(newKokPackSize);
+                if (newKokPackPrice.trim().length === 0 || Number.isNaN(price)) return;
+                if (newKokPackSize.trim().length === 0 || Number.isNaN(size) || size < 1) return;
                 update((d) => {
                   d.sessions.find((x) => x.id === id)?.shuttlecocks.push({
                     id: makeId(),
                     name: newKokName.trim() || "Kok baru",
-                    price: Number(newKokPrice),
+                    packPrice: Math.round(price),
+                    packSize: Math.round(size),
+                    used: 0,
                     playerIds: [],
                   });
                 });
                 setNewKokName("");
-                setNewKokPrice("");
+                setNewKokPackPrice("");
+                setNewKokPackSize("12");
               }}
               className={addBtn}
               aria-label="Tambah kok"
@@ -472,61 +502,103 @@ function DetailBody({ id }: { id: string }) {
               <PlusIcon className="h-4 w-4" />
             </button>
           </div>
+          <p className="mt-1.5 text-xs text-primary-dark/60">Masukkan harga <b>1 slope/tube utuh</b>. Harga per butir dihitung otomatis.</p>
           <div className="mt-3 space-y-2">
-            {session.shuttlecocks.map((k) => (
-              <div key={k.id} className="rounded-lg border-l-4 border-primary-light bg-surface-card p-4 shadow-card">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium text-primary-dark">{k.name}</span>
-                  {editingPrice === k.id ? (
-                    <span className="flex items-center gap-1.5">
-                      <input
-                        value={priceDraft}
-                        onChange={(e) => setPriceDraft(e.target.value)}
-                        inputMode="numeric"
-                        className="w-24 rounded-lg border border-primary-light bg-cream px-2 py-1 text-sm text-primary-dark"
-                      />
+            {session.shuttlecocks.map((k) => {
+              const cost = shuttleItemCost(k);
+              const perHead = k.playerIds.length > 0 ? Math.round(cost / k.playerIds.length) : 0;
+              return (
+                <div key={k.id} className="rounded-lg border-l-4 border-primary-light bg-surface-card p-4 shadow-card">
+                  <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                    <span className="font-medium text-primary-dark">{k.name}</span>
+                    {editingKok === k.id ? (
+                      <span className="flex items-center gap-1.5">
+                        <input
+                          value={kokPriceDraft}
+                          onChange={(e) => setKokPriceDraft(e.target.value)}
+                          inputMode="numeric"
+                          aria-label="Harga 1 slope"
+                          className="w-24 rounded-lg border border-primary-light bg-cream px-2 py-1 text-sm text-primary-dark"
+                        />
+                        <span className="text-xs text-primary-dark/70">slope × isi</span>
+                        <input
+                          value={kokSizeDraft}
+                          onChange={(e) => setKokSizeDraft(e.target.value)}
+                          inputMode="numeric"
+                          aria-label="Isi satu slope"
+                          className="w-14 rounded-lg border border-primary-light bg-cream px-2 py-1 text-sm text-primary-dark"
+                        />
+                        <button
+                          onClick={() => {
+                            const p = Number(kokPriceDraft);
+                            const n = Number(kokSizeDraft);
+                            if (!Number.isNaN(p) && !Number.isNaN(n) && n >= 1) {
+                              update((d) => {
+                                const it = d.sessions.find((x) => x.id === id)?.shuttlecocks.find((x) => x.id === k.id);
+                                if (it) {
+                                  it.packPrice = Math.round(p);
+                                  it.packSize = Math.round(n);
+                                }
+                              });
+                            }
+                            setEditingKok(null);
+                          }}
+                          className="text-sm font-extrabold text-primary-dark"
+                          aria-label="Simpan harga kok"
+                        >
+                          <CheckIcon className="h-4 w-4" />
+                        </button>
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-2 text-primary-dark/70">
+                        {formatIDR(k.packPrice)}/slope isi {k.packSize} = {formatIDR(Math.round(shuttleUnitPrice(k)))}/butir
+                        <button
+                          onClick={() => { setEditingKok(k.id); setKokPriceDraft(String(k.packPrice)); setKokSizeDraft(String(k.packSize)); }}
+                          className="text-xs text-primary-dark/60"
+                        >
+                          Ubah
+                        </button>
+                        <button
+                          onClick={() => update((d) => {
+                            const s = d.sessions.find((x) => x.id === id);
+                            if (s) s.shuttlecocks = s.shuttlecocks.filter((x) => x.id !== k.id);
+                          })}
+                          className="text-coral"
+                          aria-label="Hapus kok"
+                        >
+                          <XIcon className="h-4 w-4" />
+                        </button>
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-lg bg-primary-bg px-3 py-2 text-sm">
+                    <span className="flex items-center gap-2 text-primary-dark">
+                      <span className="text-xs font-medium text-primary-dark/70">Terpakai</span>
                       <button
-                        onClick={() => {
-                          const v = Number(priceDraft);
-                          if (!Number.isNaN(v)) {
-                            update((d) => {
-                              const it = d.sessions.find((x) => x.id === id)?.shuttlecocks.find((x) => x.id === k.id);
-                              if (it) it.price = v;
-                            });
-                          }
-                          setEditingPrice(null);
-                        }}
-                        className="text-sm font-extrabold text-primary-dark"
-                        aria-label="Simpan harga"
+                        onClick={() => bumpKokUsed(k.id, -1)}
+                        className="press h-6 w-6 rounded-full bg-surface-card font-extrabold text-primary-dark"
+                        aria-label="Kurangi butir terpakai"
                       >
-                        <CheckIcon className="h-4 w-4" />
+                        −
+                      </button>
+                      <span className="min-w-14 text-center font-extrabold">{k.used} butir</span>
+                      <button
+                        onClick={() => bumpKokUsed(k.id, 1)}
+                        className="press h-6 w-6 rounded-full bg-surface-card font-extrabold text-primary-dark"
+                        aria-label="Tambah butir terpakai"
+                      >
+                        +
                       </button>
                     </span>
-                  ) : (
-                    <span className="flex items-center gap-2 text-primary-dark/70">
-                      {formatIDR(k.price)}
-                      <button
-                        onClick={() => { setEditingPrice(k.id); setPriceDraft(String(k.price)); }}
-                        className="text-xs text-primary-dark/60"
-                      >
-                        Ubah
-                      </button>
-                      <button
-                        onClick={() => update((d) => {
-                          const s = d.sessions.find((x) => x.id === id);
-                          if (s) s.shuttlecocks = s.shuttlecocks.filter((x) => x.id !== k.id);
-                        })}
-                        className="text-coral"
-                        aria-label="Hapus kok"
-                      >
-                        <XIcon className="h-4 w-4" />
-                      </button>
+                    <span className="text-primary-dark/70">
+                      = <b className="text-primary-dark">{formatIDR(cost)}</b>
+                      {k.playerIds.length > 0 && <> · ≈{formatIDR(perHead)}/orang ({k.playerIds.length} pemain)</>}
                     </span>
-                  )}
+                  </div>
+                  {assignList("shuttlecocks", k)}
                 </div>
-                {assignList("shuttlecocks", k)}
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}

@@ -98,7 +98,7 @@ test("sessions enforce status check, unique share_code, and payments jsonb round
        '33333333-3333-3333-3333-333333333333', '${uid}', 'Sesi Jumat', '2026-10-02', '8FK29',
        array['${uid}','${gid}']::uuid[],
        '[{"id":"c1","name":"Court 1","price":120000,"playerIds":["${uid}","${gid}"]}]'::jsonb,
-       '[{"id":"k1","name":"Kok A","price":50000,"playerIds":["${uid}"]}]'::jsonb,
+       '[{"id":"k1","name":"Kok A","packPrice":111000,"packSize":12,"used":12,"playerIds":["${uid}"]}]'::jsonb,
        '[{"id":"a1","name":"Parkir","category":"Parkir","amount":10000}]'::jsonb,
        '{"${uid}":"paid","${gid}":"pending"}'::jsonb
      );`,
@@ -106,11 +106,15 @@ test("sessions enforce status check, unique share_code, and payments jsonb round
 
   const s = await db.query<{
     courts: { price: number; playerIds: string[] }[];
+    shuttlecocks: { packPrice: number; packSize: number; used: number }[];
     payments: Record<string, string>;
     player_ids: string[];
-  }>("select courts, payments, player_ids from public.sessions");
+  }>("select courts, shuttlecocks, payments, player_ids from public.sessions");
   assert.equal(s.rows[0].courts[0].price, 120000);
   assert.deepEqual(s.rows[0].courts[0].playerIds, [uid, gid]);
+  assert.equal(s.rows[0].shuttlecocks[0].packPrice, 111000);
+  assert.equal(s.rows[0].shuttlecocks[0].packSize, 12);
+  assert.equal(s.rows[0].shuttlecocks[0].used, 12);
   assert.equal(s.rows[0].payments[gid], "pending");
   assert.deepEqual(s.rows[0].player_ids, [uid, gid]);
 

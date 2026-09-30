@@ -18,7 +18,12 @@ export interface Court {
 export interface Shuttle {
   id: string;
   name: string;
-  price: number;
+  /** Harga satu slope/tube utuh (mis. 1 tube isi 12 = Rp111.000). */
+  packPrice: number;
+  /** Isi satu slope — pembagi harga, jadi harga per butir = packPrice / packSize. */
+  packSize: number;
+  /** Berapa butir yang dipakai untuk item ini (dipakai bersama semua pemain di sini). */
+  used: number;
   playerIds: string[];
   paidBy?: string;
 }

@@ -116,6 +116,16 @@ pemain" (`id` acak, `auth_id` null). Karena `calculateSession(s)` memakan objek
 tanpa tabel anak, tanpa mengubah math. Semua id di dalamnya merujuk
 `profiles.id`.
 
+`shuttlecocks` memakai model **beli per slope, pakai per butir**: `packPrice`
+(harga 1 slope/tube utuh, mis. Rp111.000), `packSize` (isi 1 slope, mis. 12),
+dan `used` (butir yang benar-benar habis dipakai). Biaya item =
+`packPrice / packSize * used` dibulatkan ke rupiah, lalu dibagi rata ke
+`playerIds` item itu. Harga per butir tidak pernah disimpan — mengubah
+`packSize` otomatis mengubah harga per butir. Sesi lama yang masih menyimpan
+satu `price` total tetap terbaca (`rowToSession` menganggap slope berisi 1
+butir yang seluruhnya terpakai), dan akan tersimpan dalam bentuk baru begitu
+disentuh lewat PATCH.
+
 `profiles` **tidak menyimpan email**. Kolomnya sengaja tidak ada di skema:
 `profiles` dibaca lewat PostgREST dengan anon key yang ikut ter-bundle ke
 browser, jadi kolom duplikat dari `auth.users.email` akan bocor ke pengunjung

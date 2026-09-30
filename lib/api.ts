@@ -73,7 +73,7 @@ export const api = {
     notes?: string;
     playerNames: string[];
     courts: { name: string; price: number }[];
-    shuttlecocks: { name: string; price: number }[];
+    shuttlecocks: { name: string; packPrice: number; packSize: number }[];
     additionalCosts: { name: string; category: string; amount: number }[];
   }) =>
     req<{ session: Session }>("/api/sessions", {
