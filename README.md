@@ -68,6 +68,20 @@ Daftar akun di `/register`, lalu buat sesi di `/dashboard`.
    **Authentication → SMTP Settings**; batasnya lalu bisa diatur di
    **Authentication → Rate Limits**.
 
+## Region fungsi (latensi)
+
+`vercel.json` memakai `"regions": ["sin1"]` — fungsi berjalan di Singapura,
+satu region dengan project Supabase (yang tinggal di `ap-southeast-1`).
+
+Ini bukan kosmetik. Default Vercel adalah `iad1` (Washington DC), sehingga
+setiap round-trip ke Supabase menyeberangi Pasifik (~280 ms). Karena
+`/api/sessions/by-code/[code]` butuh dua round-trip berurutan, route itu
+memakan **~0,92 s** di `iad1` vs **~0,21 s** di `sin1` (diukur dari Indonesia).
+
+Kalau project Supabase dipindah region, `regions` **harus ikut diubah** ke
+region yang sama — kalau tidak, latensi kembali ke angka `iad1` di atas.
+Hobby hanya boleh satu region; multi-region perlu plan Pro.
+
 ## Arsitektur
 
 - `app/api/**` — API Routes (monolith, Next.js). Semua baca/tulis lewat sini;
