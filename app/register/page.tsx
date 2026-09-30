@@ -42,7 +42,14 @@ function RegisterForm() {
     });
     setBusy(false);
     if (authError) {
-      setError(authError.message);
+      // Supabase membatasi pengiriman email Auth (provider bawaan: 2/jam per
+      // project). Tanpa pemetaan ini user hanya melihat pesan Inggris mentah.
+      setError(
+        authError.code === "over_email_send_rate_limit" ||
+          /rate limit/i.test(authError.message)
+          ? "Batas kirim email Supabase tercapai (maksimal 2 email/jam untuk provider bawaan). Coba lagi nanti atau hubungi admin."
+          : authError.message,
+      );
       return;
     }
     // Bila konfirmasi email aktif, session masih null sampai user klik link.
