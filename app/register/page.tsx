@@ -33,7 +33,12 @@ function RegisterForm() {
     const { data, error: authError } = await supabase.auth.signUp({
       email: email.trim(),
       password,
-      options: { data: { name: name.trim() } },
+      // Tanpa `emailRedirectTo`, link konfirmasi memakai Site URL dari dashboard
+      // Supabase. Kirim `next` sebagai query agar user kembali ke halaman tujuan.
+      options: {
+        data: { name: name.trim() },
+        emailRedirectTo: `${window.location.origin}${next || "/dashboard"}`,
+      },
     });
     setBusy(false);
     if (authError) {
