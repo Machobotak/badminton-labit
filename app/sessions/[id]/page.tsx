@@ -88,7 +88,7 @@ function DetailBody({ id }: { id: string }) {
     return (
       <main className="py-10 text-center">
         <p className="font-extrabold text-primary-dark">Sesi tidak ditemukan</p>
-        <Link href="/dashboard" className="mt-2 inline-flex items-center gap-1.5 text-sm font-extrabold text-primary-dark"><ArrowLeftIcon className="h-4 w-4" /> Kembali ke dashboard</Link>
+        <Link href="/dashboard" className="mt-2 inline-flex items-center gap-1.5 text-sm font-extrabold text-primary-dark hover:underline"><ArrowLeftIcon className="h-4 w-4" /> Kembali ke dashboard</Link>
       </main>
     );
 
@@ -327,8 +327,9 @@ function DetailBody({ id }: { id: string }) {
         <p className="mt-1.5 flex items-center gap-1 text-xs font-medium text-coral"><AlertIcon className="h-3.5 w-3.5" /> Belum ada pemain di item ini</p>
       )}
       <div className="mt-2 flex items-center gap-2">
-        <label className="text-xs text-primary-dark/70">Siapa yang nombok?</label>
+        <label className="text-xs text-primary-dark/70" htmlFor={`paidby-${kind}-${item.id}`}>Siapa yang nombok?</label>
         <select
+          id={`paidby-${kind}-${item.id}`}
           value={item.paidBy ?? ""}
           onChange={(e) =>
             update((d) => {
@@ -358,7 +359,7 @@ function DetailBody({ id }: { id: string }) {
 
   return (
     <main className="py-6 md:py-10">
-      <Link href="/dashboard" className="inline-flex items-center gap-1.5 text-sm font-medium text-primary-dark/70">
+      <Link href="/dashboard" className="inline-flex items-center gap-1.5 text-sm font-medium text-primary-dark/70 hover:text-primary-dark hover:underline">
         <ArrowLeftIcon className="h-4 w-4" /> Dashboard
       </Link>
       <div className="mt-1 flex items-start justify-between gap-2">
@@ -394,8 +395,8 @@ function DetailBody({ id }: { id: string }) {
           <button
             key={t}
             onClick={() => go(t)}
-            className={`press whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-bold ${
-              active === t ? "bg-primary text-white shadow-teal-glow" : "bg-primary-bg text-primary-dark"
+            className={`press whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-bold transition-colors duration-150 ${
+              active === t ? "bg-primary text-white shadow-teal-glow" : "bg-primary-bg text-primary-dark hover:bg-primary-light/60"
             }`}
           >
             {TAB_LABEL[t]}
@@ -443,7 +444,7 @@ function DetailBody({ id }: { id: string }) {
                   <div key={pid} className="rounded-lg border-l-4 border-primary-light bg-surface-card p-4 shadow-card">
                     <button
                       onClick={() => setExpanded(open ? null : pid)}
-                      className="flex w-full items-center justify-between px-3 py-2.5 text-sm"
+                      className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm transition-colors duration-150 hover:bg-primary-bg/60"
                     >
                       <span className="inline-flex items-center gap-1.5 font-extrabold text-primary-dark">
                         {userName(pid)}
@@ -495,7 +496,7 @@ function DetailBody({ id }: { id: string }) {
                 </span>
                 <button
                   onClick={() => update((d) => removePlayer(d, id, pid))}
-                  className="text-sm text-coral"
+                  className="text-sm text-coral transition-colors duration-150 hover:underline"
                 >
                   Hapus
                 </button>
@@ -557,7 +558,7 @@ function DetailBody({ id }: { id: string }) {
                           }
                           setEditingPrice(null);
                         }}
-                        className="text-sm font-extrabold text-primary-dark"
+                        className="text-sm font-extrabold text-primary-dark transition-colors duration-150 hover:text-primary-light"
                         aria-label="Simpan harga"
                       >
                         <CheckIcon className="h-4 w-4" />
@@ -568,7 +569,7 @@ function DetailBody({ id }: { id: string }) {
                       {formatIDR(c.price)}
                       <button
                         onClick={() => { setEditingPrice(c.id); setPriceDraft(String(c.price)); }}
-                        className="text-xs text-primary-dark/60"
+                        className="text-xs text-primary-dark/60 transition-colors duration-150 hover:text-primary-dark hover:underline"
                       >
                         Ubah
                       </button>
@@ -577,7 +578,7 @@ function DetailBody({ id }: { id: string }) {
                           const s = d.sessions.find((x) => x.id === id);
                           if (s) s.courts = s.courts.filter((x) => x.id !== c.id);
                         })}
-                        className="text-coral"
+                        className="text-coral transition-colors duration-150 hover:underline"
                         aria-label="Hapus lapangan"
                       >
                         <XIcon className="h-4 w-4" />
@@ -665,7 +666,7 @@ function DetailBody({ id }: { id: string }) {
                             }
                             setEditingKok(null);
                           }}
-                          className="text-sm font-extrabold text-primary-dark"
+                          className="text-sm font-extrabold text-primary-dark transition-colors duration-150 hover:text-primary-light"
                           aria-label="Simpan harga kok"
                         >
                           <CheckIcon className="h-4 w-4" />
@@ -676,7 +677,7 @@ function DetailBody({ id }: { id: string }) {
                         {formatIDR(k.packPrice)}/slope isi {k.packSize} = {formatIDR(Math.round(shuttleUnitPrice(k)))}/butir
                         <button
                           onClick={() => { setEditingKok(k.id); setKokPriceDraft(String(k.packPrice)); setKokSizeDraft(String(k.packSize)); }}
-                          className="text-xs text-primary-dark/60"
+                          className="text-xs text-primary-dark/60 transition-colors duration-150 hover:text-primary-dark hover:underline"
                         >
                           Ubah
                         </button>
@@ -685,7 +686,7 @@ function DetailBody({ id }: { id: string }) {
                             const s = d.sessions.find((x) => x.id === id);
                             if (s) s.shuttlecocks = s.shuttlecocks.filter((x) => x.id !== k.id);
                           })}
-                          className="text-coral"
+                          className="text-coral transition-colors duration-150 hover:underline"
                           aria-label="Hapus kok"
                         >
                           <XIcon className="h-4 w-4" />
@@ -698,7 +699,7 @@ function DetailBody({ id }: { id: string }) {
                       <span className="text-xs font-medium text-primary-dark/70">Terpakai</span>
                       <button
                         onClick={() => bumpKokUsed(k.id, -1)}
-                        className="press h-6 w-6 rounded-full bg-surface-card font-extrabold text-primary-dark"
+                        className="press h-6 w-6 rounded-full bg-surface-card font-extrabold text-primary-dark transition-colors duration-150 hover:bg-primary-bg"
                         aria-label="Kurangi butir terpakai"
                       >
                         −
@@ -706,7 +707,7 @@ function DetailBody({ id }: { id: string }) {
                       <span className="min-w-14 text-center font-extrabold">{k.used} butir</span>
                       <button
                         onClick={() => bumpKokUsed(k.id, 1)}
-                        className="press h-6 w-6 rounded-full bg-surface-card font-extrabold text-primary-dark"
+                        className="press h-6 w-6 rounded-full bg-surface-card font-extrabold text-primary-dark transition-colors duration-150 hover:bg-primary-bg"
                         aria-label="Tambah butir terpakai"
                       >
                         +
@@ -814,7 +815,7 @@ function DetailBody({ id }: { id: string }) {
                       />
                       <button
                         onClick={() => saveAdditional(a.id)}
-                        className="press inline-flex shrink-0 items-center justify-center rounded-full bg-primary-bg px-3 text-sm font-extrabold text-primary-dark"
+                        className="press inline-flex shrink-0 items-center justify-center rounded-full bg-primary-bg px-3 text-sm font-extrabold text-primary-dark transition-colors duration-150 hover:bg-primary-light/25"
                         aria-label="Simpan biaya"
                       >
                         <CheckIcon className="h-4 w-4" />
@@ -824,7 +825,7 @@ function DetailBody({ id }: { id: string }) {
                           setEditingAdd(null);
                           setAddError("");
                         }}
-                        className="press inline-flex shrink-0 items-center justify-center rounded-full bg-primary-bg px-3 text-primary-dark/70"
+                        className="press inline-flex shrink-0 items-center justify-center rounded-full bg-primary-bg px-3 text-primary-dark/70 transition-colors duration-150 hover:bg-primary-light/25"
                         aria-label="Batal ubah biaya"
                       >
                         <XIcon className="h-4 w-4" />

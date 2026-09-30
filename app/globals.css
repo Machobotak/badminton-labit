@@ -81,9 +81,135 @@ body {
   animation: row-in 0.25s ease-out;
 }
 
+/* `translate` dan `filter` dari rule hover global (bawah) tetap ikut beranimasi;
+   `transform` dipakai untuk efek tekan. */
 .press {
-  transition: transform 0.12s ease-out;
+  transition:
+    transform 0.12s ease-out,
+    color 0.15s ease-out,
+    background-color 0.15s ease-out,
+    border-color 0.15s ease-out,
+    box-shadow 0.15s ease-out,
+    filter 0.15s ease-out,
+    translate 0.15s ease-out;
 }
 .press:active {
   transform: scale(0.95);
+}
+
+/*
+ * Tombol hapus sesi: membesar + menyala saat kursor mendekat, lalu "meletup"
+ * saat ditekan. Transform tidak mengubah layout, jadi tombol di dalam kartu
+ * tidak mendorong teks di sekitarnya.
+ */
+.btn-delete {
+  transition:
+    transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
+    color 0.18s ease-out,
+    background-color 0.18s ease-out,
+    border-color 0.18s ease-out,
+    box-shadow 0.22s ease-out,
+    filter 0.15s ease-out,
+    translate 0.15s ease-out;
+}
+.btn-delete:hover {
+  transform: scale(1.18) rotate(-8deg);
+  background-color: var(--color-coral);
+  color: #fff;
+  box-shadow: var(--shadow-coral-glow);
+}
+.btn-delete:active {
+  background-color: var(--color-coral-dark);
+  color: #fff;
+  box-shadow: var(--shadow-coral-glow);
+  animation: delete-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes delete-pop {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  40% {
+    transform: scale(1.3) rotate(-12deg);
+  }
+  100% {
+    transform: scale(0.82) rotate(0deg);
+  }
+}
+
+/*
+ * Umpan balik hover untuk setiap elemen yang bisa diklik (tautan, tombol,
+ * select, kotak centang). Selector `:where()` berbobot 0, jadi class komponen
+ * (`.btn-delete`, `.press`) dan utility Tailwind selalu menang lebih dulu,
+ * berapa pun urutan rule-nya.
+ */
+:where(a[href], button, summary) {
+  cursor: pointer;
+  transition:
+    color 0.15s ease-out,
+    background-color 0.15s ease-out,
+    border-color 0.15s ease-out,
+    box-shadow 0.15s ease-out,
+    filter 0.15s ease-out,
+    translate 0.15s ease-out;
+}
+@media (hover: hover) {
+  /* translate dan filter bukan `transform`, jadi tidak menimpa scale/rotate
+     milik `.press` maupun keyframe; box-shadow memberi kesan elemen terangkat. */
+  :where(a[href]:hover, button:hover, summary:hover):not(:disabled) {
+    translate: 0 -1px;
+    box-shadow: var(--shadow-teal-glow);
+    filter: brightness(1.05);
+  }
+  /* Kontrol form: sorotan halus, bukan "melompat". */
+  :where(select:hover, input[type="file"]:hover):not(:disabled) {
+    box-shadow: inset 0 0 0 1px var(--color-primary);
+  }
+  /* Label yang benar-benar bisa diklik (terhubung `for`/`htmlFor` ke kontrol
+     tepat setelahnya): teks bergaris bawah saat kursor mendekat. Label yang
+     hanya keterangan biasa tidak diberi umpan balik agar tidak menyesatkan. */
+  :where(label:has(+ input, + select, + textarea)):hover {
+    text-decoration-line: underline;
+    text-underline-offset: 3px;
+  }
+  :where(input[type="checkbox"]:hover, input[type="radio"]:hover):not(:disabled) {
+    filter: brightness(1.12);
+  }
+  :where(button:disabled) {
+    cursor: default;
+  }
+}
+
+select,
+input[type="checkbox"],
+input[type="radio"],
+input[type="file"],
+label:has(+ input, + select, + textarea) {
+  cursor: pointer;
+}
+
+input[type="checkbox"]:disabled,
+input[type="radio"]:disabled,
+select:disabled,
+label:has(:disabled) {
+  cursor: default;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-delete,
+  .btn-delete:hover,
+  .btn-delete:active {
+    transition: none;
+    animation: none;
+  }
+  .btn-delete:hover,
+  .btn-delete:active {
+    transform: none;
+  }
+  :where(a[href], button, summary) {
+    transition: none;
+  }
+  :where(a[href]:hover, button:hover, summary:hover) {
+    translate: none;
+    filter: none;
+  }
 }

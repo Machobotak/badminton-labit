@@ -88,10 +88,10 @@ export default function DashboardPage() {
           <button
             key={f.id}
             onClick={() => setFilter(f.id)}
-            className={`press whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-bold ${
+            className={`press whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-bold transition-colors duration-150 ${
               filter === f.id
                 ? "bg-primary text-white shadow-teal-glow"
-                : "bg-primary-bg text-primary-dark"
+                : "bg-primary-bg text-primary-dark hover:bg-primary-light/60"
             }`}
           >
             {f.label}
@@ -160,9 +160,9 @@ export default function DashboardPage() {
                       }}
                       aria-label={`Hapus sesi ${s.name}`}
                       title="Hapus sesi"
-                      className="-mr-2 ml-1 rounded-full p-1.5 text-coral"
+                      className="btn-delete -mr-1.5 ml-1 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-coral"
                     >
-                      <XIcon className="h-4 w-4" />
+                      <XIcon className="h-5 w-5" />
                     </button>
                   )}
                 </span>

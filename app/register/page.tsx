@@ -122,7 +122,7 @@ function RegisterForm() {
       </form>
       <p className="mt-6 text-center text-sm text-primary-dark/70">
         Sudah punya akun?{" "}
-        <Link href="/login" className="font-extrabold text-primary-dark">
+        <Link href="/login" className="font-extrabold text-primary-dark hover:underline">
           Masuk
         </Link>
       </p>
