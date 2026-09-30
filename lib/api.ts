@@ -87,6 +87,11 @@ export const api = {
       body: JSON.stringify(patch),
     }),
 
+  deleteSession: (id: string) =>
+    req<{ ok: boolean }>(`/api/sessions/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+    }),
+
   addPlayer: (id: string, name: string) =>
     req<{ user: User; session: Session }>(
       `/api/sessions/${encodeURIComponent(id)}/players`,

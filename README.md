@@ -131,6 +131,11 @@ butir (`PCS_PER_FOUR_PLAYERS` di halaman detail), tanpa pernah menurunkannya
 saat pemain dilepas — pemakaian adalah fakta yang dicatat, bukan turunan dari
 jumlah pemain. Tagihan per orang = biaya item ÷ jumlah pemain di item itu.
 
+Biaya tambahan (`additionalCosts`) dibagi rata ke **semua** `playerIds` sesi
+(bukan per item seperti lapangan/kok): totalnya = jumlah `amount`, tagihan per
+orang = total ÷ jumlah pemain. Bisa ditambah/diubah/dihapus dari tab "Biaya
+Lain" di halaman detail.
+
 `profiles` **tidak menyimpan email**. Kolomnya sengaja tidak ada di skema:
 `profiles` dibaca lewat PostgREST dengan anon key yang ikut ter-bundle ke
 browser, jadi kolom duplikat dari `auth.users.email` akan bocor ke pengunjung
@@ -154,6 +159,7 @@ pemegang anon key.
 | POST | `/api/sessions` | Buat sesi (wizard 6 langkah) |
 | GET | `/api/sessions/[id]` | Satu sesi + pemain |
 | PATCH | `/api/sessions/[id]` | Update parsial + cascade saat `playerIds` menyusut |
+| DELETE | `/api/sessions/[id]` | Hapus sesi (hanya kreator, ditegakkan RLS `sessions_delete_creator`) |
 | POST | `/api/sessions/[id]/players` | `{name}` (tamu baru) atau `{profileId}` |
 | GET | `/api/sessions/by-code/[code]` | Preview publik undangan |
 | POST | `/api/sessions/by-code/[code]/join` | Join sesi (wajib login) |

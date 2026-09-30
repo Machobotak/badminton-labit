@@ -15,6 +15,8 @@ export interface UseApp {
   update: (fn: (d: AppData) => void) => void;
   /** Tambah pemain baru (butuh nama → buat profil di server). */
   addPlayer: (sessionId: string, name: string) => Promise<void>;
+  /** Hapus sesi (hanya kreator — ditegakkan RLS) + buang dari daftar lokal. */
+  removeSession: (sessionId: string) => Promise<void>;
   /** Simpan nama profil sendiri (PATCH /api/me). */
   updateProfile: (name: string) => Promise<void>;
 }
@@ -141,6 +143,25 @@ export function useApp(): UseApp {
     [enqueue],
   );
 
+  const removeSession = useCallback(
+    (sessionId: string) =>
+      new Promise<void>((resolve) => {
+        enqueue(async () => {
+          await api.deleteSession(sessionId);
+          const prev = dataRef.current;
+          if (prev) {
+            const next: AppData = {
+              ...prev,
+              sessions: prev.sessions.filter((s) => s.id !== sessionId),
+            };
+            dataRef.current = next;
+            setData(next);
+          }
+        }).finally(resolve);
+      }),
+    [enqueue],
+  );
+
   const updateProfile = useCallback(async (name: string) => {
     const trimmed = name.trim();
     if (!trimmed) return;
@@ -159,5 +180,14 @@ export function useApp(): UseApp {
     setData(next);
   }, []);
 
-  return { data, loading, error, reload, update, addPlayer, updateProfile };
+  return {
+    data,
+    loading,
+    error,
+    reload,
+    update,
+    addPlayer,
+    removeSession,
+    updateProfile,
+  };
 }

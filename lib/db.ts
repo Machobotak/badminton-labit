@@ -98,6 +98,7 @@ export function rowToSession(r: DbSessionRow): Session {
       ? r.additional_costs
       : [],
     payments: (r.payments ?? {}) as Record<string, PayStatus>,
+    ...(r.creator_id ? { creatorId: r.creator_id } : {}),
     ...(r.payment_qr ? { paymentQr: r.payment_qr } : {}),
   };
 }

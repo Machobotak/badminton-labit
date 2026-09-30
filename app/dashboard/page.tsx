@@ -8,7 +8,7 @@ import { formatDateID, greeting, timeRange } from "../../lib/format";
 import type { SessionStatus } from "../../lib/types";
 import { currentUser } from "../../lib/mutations";
 import { useApp } from "../../lib/useApp";
-import { PlusIcon } from "../../components/icons";
+import { PlusIcon, XIcon } from "../../components/icons";
 
 const FILTERS: { id: SessionStatus | "all"; label: string }[] = [
   { id: "all", label: "Semua" },
@@ -19,9 +19,25 @@ const FILTERS: { id: SessionStatus | "all"; label: string }[] = [
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { data, loading, error } = useApp();
+  const { data, loading, error, removeSession } = useApp();
   const [filter, setFilter] = useState<SessionStatus | "all">("all");
+  const [deleteError, setDeleteError] = useState("");
   const me = data ? currentUser(data) : null;
+
+  const hapusSesi = async (id: string, name: string) => {
+    if (
+      !window.confirm(
+        `Hapus sesi "${name}"? Semua lapangan, kok, dan biaya di dalamnya ikut terhapus. Tindakan ini tidak bisa dibatalkan.`,
+      )
+    )
+      return;
+    setDeleteError("");
+    try {
+      await removeSession(id);
+    } catch (e) {
+      setDeleteError(e instanceof Error ? e.message : "Gagal menghapus sesi");
+    }
+  };
 
   useEffect(() => {
     if (data && !me) router.replace("/login");
@@ -83,6 +99,12 @@ export default function DashboardPage() {
         ))}
       </div>
 
+      {deleteError && (
+        <p className="mt-4 rounded-lg bg-coral-light/30 px-3 py-2 text-sm text-error">
+          {deleteError}
+        </p>
+      )}
+
       <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {sessions.length === 0 && (
           <div className="rounded-lg bg-primary-bg p-6 text-center text-sm text-primary-dark/60">
@@ -97,7 +119,7 @@ export default function DashboardPage() {
             <Link
               key={s.id}
               href={`/sessions/${s.id}`}
-              className="block rounded-lg border-l-4 border-primary-light bg-surface-card p-4 shadow-card"
+              className="press relative block rounded-lg border-l-4 border-primary-light bg-surface-card p-4 shadow-card"
             >
               <div className="flex items-start justify-between gap-2">
                 <div>
@@ -121,13 +143,28 @@ export default function DashboardPage() {
                   {s.status}
                 </span>
               </div>
-              <div className="mt-3 flex items-center justify-between border-t border-primary-light/40 pt-3 text-sm">
+              <div className="mt-3 flex items-center justify-between gap-2 border-t border-primary-light/40 pt-3 text-sm">
                 <span className="text-primary-dark/70">
                   Total <span className="font-semibold text-primary-dark">{formatIDR(calc.totalCost)}</span>
                 </span>
-                <span className="text-primary-dark/70">
+                <span className="flex items-center gap-2 text-primary-dark/70">
                   Tagihanmu{" "}
                   <span className="font-extrabold text-primary">{formatIDR(mine)}</span>
+                  {s.creatorId === me.id && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        void hapusSesi(s.id, s.name);
+                      }}
+                      aria-label={`Hapus sesi ${s.name}`}
+                      title="Hapus sesi"
+                      className="-mr-2 ml-1 rounded-full p-1.5 text-coral"
+                    >
+                      <XIcon className="h-4 w-4" />
+                    </button>
+                  )}
                 </span>
               </div>
             </Link>

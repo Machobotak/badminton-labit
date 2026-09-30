@@ -42,9 +42,11 @@ test("rowToSession maps snake_case row into the client Session shape", () => {
   assert.deepEqual(s.additionalCosts, [
     { id: "a1", name: "Parkir", category: "Parkir", amount: 10000 },
   ]);
+  assert.equal(s.creatorId, "p1");
   assert.deepEqual(s.payments, { p1: "paid", p2: "pending" });
   assert.equal("paymentQr" in s, false);
   assert.equal("notes" in s, false);
+  assert.equal("creatorId" in rowToSession({ ...row, creator_id: "" }), false);
 });
 
 test("rowToSession carries optional notes and payment_qr when present", () => {

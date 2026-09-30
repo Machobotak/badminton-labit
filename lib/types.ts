@@ -52,6 +52,8 @@ export interface Session {
   payments: Record<string, PayStatus>;
   /** Data-URL gambar QR pembayaran (hasil upload, tersimpan di kolom payment_qr). */
   paymentQr?: string;
+  /** ID pembuat sesi (dari `creator_id`); hanya kreator boleh menghapus sesi. */
+  creatorId?: string;
 }
 
 export const ADD_COST_CATEGORIES = [

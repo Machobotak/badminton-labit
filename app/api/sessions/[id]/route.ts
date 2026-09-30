@@ -142,3 +142,30 @@ export async function PATCH(
     return serverError(e);
   }
 }
+
+/**
+ * Hapus sesi. RLS `sessions_delete_creator` membatasi ke kreator, jadi
+ * klien user-scoped dipakai — peserta yang bukan kreator akan dapat 404.
+ */
+export async function DELETE(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    const { id } = await params;
+    const { supabase, user } = await requireUser();
+    if (!user) return err("Belum login", 401);
+    const { data, error } = await supabase
+      .from("sessions")
+      .delete()
+      .eq("id", id)
+      .select("id");
+    if (error) throw error;
+    if (!data || data.length === 0)
+      return err("Sesi tidak ditemukan atau kamu bukan pembuatnya", 404);
+    return Response.json({ ok: true });
+  } catch (e) {
+    if (e instanceof BadRequest) return err(e.message);
+    return serverError(e);
+  }
+}

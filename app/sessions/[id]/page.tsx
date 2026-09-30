@@ -5,19 +5,27 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { calculateSession, formatIDR, shuttleItemCost, shuttleUnitPrice } from "../../../lib/calculation";
 import { formatDateID, timeRange } from "../../../lib/format";
-import type { Session } from "../../../lib/types";
+import { ADD_COST_CATEGORIES, type Session } from "../../../lib/types";
 import { currentUser, removePlayer, togglePaid } from "../../../lib/mutations";
 import { makeId } from "../../../lib/db";
 import { useApp } from "../../../lib/useApp";
 import { AlertIcon, ArrowLeftIcon, CheckIcon, ClockIcon, LinkIcon, PlusIcon, QrIcon, UploadIcon, XIcon } from "../../../components/icons";
 
-const TABS = ["overview", "players", "courts", "shuttlecocks", "payments"] as const;
+const TABS = [
+  "overview",
+  "players",
+  "courts",
+  "shuttlecocks",
+  "additional",
+  "payments",
+] as const;
 type Tab = (typeof TABS)[number];
 const TAB_LABEL: Record<Tab, string> = {
   overview: "Ringkasan",
   players: "Pemain",
   courts: "Lapangan",
   shuttlecocks: "Kok",
+  additional: "Biaya Lain",
   payments: "Bayar",
 };
 
@@ -28,7 +36,14 @@ function DetailBody({ id }: { id: string }) {
   const router = useRouter();
   const tab = (useSearchParams().get("tab") as Tab) || "overview";
   const active: Tab = TABS.includes(tab) ? tab : "overview";
-  const { data, loading, error: loadError, update, addPlayer: addPlayerApi } = useApp();
+  const {
+    data,
+    loading,
+    error: loadError,
+    update,
+    addPlayer: addPlayerApi,
+    removeSession,
+  } = useApp();
   const [copied, setCopied] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [newPlayer, setNewPlayer] = useState("");
@@ -42,6 +57,15 @@ function DetailBody({ id }: { id: string }) {
   const [kokSizeDraft, setKokSizeDraft] = useState("");
   const [editingPrice, setEditingPrice] = useState<string | null>(null);
   const [priceDraft, setPriceDraft] = useState("");
+  const [newAddName, setNewAddName] = useState("");
+  const [newAddCat, setNewAddCat] = useState<string>(ADD_COST_CATEGORIES[0]);
+  const [newAddAmount, setNewAddAmount] = useState("");
+  const [editingAdd, setEditingAdd] = useState<string | null>(null);
+  const [addNameDraft, setAddNameDraft] = useState("");
+  const [addCatDraft, setAddCatDraft] = useState<string>(ADD_COST_CATEGORIES[0]);
+  const [addAmountDraft, setAddAmountDraft] = useState("");
+  const [addError, setAddError] = useState("");
+  const [deleteError, setDeleteError] = useState("");
   const [qrError, setQrError] = useState("");
   const qrInputRef = useRef<HTMLInputElement>(null);
   const session: Session | null =
@@ -187,6 +211,85 @@ function DetailBody({ id }: { id: string }) {
     });
   };
 
+  // Biaya tambahan dibagi rata ke SEMUA pemain sesi (lihat calculateSession),
+  // jadi keanggotaannya tidak diatur per item seperti lapangan/kok.
+  const addAdditional = () => {
+    const name = newAddName.trim();
+    const amount = Number(newAddAmount);
+    if (!name) {
+      setAddError("Nama biaya tidak boleh kosong.");
+      return;
+    }
+    if (newAddAmount.trim().length === 0 || Number.isNaN(amount) || amount < 0) {
+      setAddError("Nominal harus angka ≥ 0.");
+      return;
+    }
+    setAddError("");
+    update((d) => {
+      d.sessions
+        .find((x) => x.id === id)
+        ?.additionalCosts.push({
+          id: makeId(),
+          name,
+          category: newAddCat,
+          amount: Math.round(amount),
+        });
+    });
+    setNewAddName("");
+    setNewAddAmount("");
+    setNewAddCat(ADD_COST_CATEGORIES[0]);
+  };
+
+  const saveAdditional = (addId: string) => {
+    const name = addNameDraft.trim();
+    const amount = Number(addAmountDraft);
+    if (!name) {
+      setAddError("Nama biaya tidak boleh kosong.");
+      return;
+    }
+    if (addAmountDraft.trim().length === 0 || Number.isNaN(amount) || amount < 0) {
+      setAddError("Nominal harus angka ≥ 0.");
+      return;
+    }
+    setAddError("");
+    update((d) => {
+      const it = d.sessions
+        .find((x) => x.id === id)
+        ?.additionalCosts.find((x) => x.id === addId);
+      if (it) {
+        it.name = name;
+        it.category = addCatDraft;
+        it.amount = Math.round(amount);
+      }
+    });
+    setEditingAdd(null);
+  };
+
+  const removeAdditional = (addId: string) => {
+    setAddError("");
+    setEditingAdd(null);
+    update((d) => {
+      const s = d.sessions.find((x) => x.id === id);
+      if (s) s.additionalCosts = s.additionalCosts.filter((x) => x.id !== addId);
+    });
+  };
+
+  const hapusSesi = async () => {
+    if (
+      !window.confirm(
+        `Hapus sesi "${session.name}"? Semua lapangan, kok, dan biaya di dalamnya ikut terhapus. Tindakan ini tidak bisa dibatalkan.`,
+      )
+    )
+      return;
+    setDeleteError("");
+    try {
+      await removeSession(id);
+      router.replace("/dashboard");
+    } catch (e) {
+      setDeleteError(e instanceof Error ? e.message : "Gagal menghapus sesi");
+    }
+  };
+
   const inputCls =
     "rounded-lg border-2 border-primary-light bg-cream px-4 py-2 text-sm text-primary-dark outline-none placeholder:text-primary-dark/50 focus:border-primary focus:shadow-focus";
   const addBtn =
@@ -269,6 +372,22 @@ function DetailBody({ id }: { id: string }) {
           {session.status}
         </span>
       </div>
+
+      {session.creatorId === me.id && (
+        <div className="mt-3">
+          <button
+            onClick={() => void hapusSesi()}
+            className="inline-flex items-center gap-1.5 rounded-full border-2 border-coral px-4 py-2 text-sm font-extrabold text-coral"
+          >
+            <XIcon className="h-4 w-4" /> Hapus Sesi
+          </button>
+          {deleteError && (
+            <p className="mt-2 rounded-lg bg-coral-light/30 px-3 py-2 text-sm text-error">
+              {deleteError}
+            </p>
+          )}
+        </div>
+      )}
 
       <div className="mt-3 flex gap-1.5 overflow-x-auto">
         {TABS.map((t) => (
@@ -602,6 +721,153 @@ function DetailBody({ id }: { id: string }) {
                 </div>
               );
             })}
+          </div>
+        </div>
+      )}
+
+      {active === "additional" && calc && (
+        <div className="mt-4">
+          <div className="space-y-2 rounded-lg bg-surface-card p-4 shadow-card">
+            <input
+              value={newAddName}
+              onChange={(e) => setNewAddName(e.target.value)}
+              placeholder="Nama biaya (mis. Booking Admin)"
+              className={`${inputCls} w-full`}
+            />
+            <div className="flex gap-2">
+              <select
+                value={newAddCat}
+                onChange={(e) => setNewAddCat(e.target.value)}
+                aria-label="Kategori biaya baru"
+                className={`${inputCls} flex-1`}
+              >
+                {ADD_COST_CATEGORIES.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+              <input
+                value={newAddAmount}
+                onChange={(e) => setNewAddAmount(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && addAdditional()}
+                placeholder="Nominal"
+                inputMode="numeric"
+                className={`${inputCls} w-32`}
+              />
+              <button
+                onClick={addAdditional}
+                className={addBtn}
+                aria-label="Tambah biaya lain"
+              >
+                <PlusIcon className="h-4 w-4" />
+              </button>
+            </div>
+            {addError && (
+              <p className="rounded-lg bg-coral-light/30 px-2 py-1 text-xs text-error">
+                {addError}
+              </p>
+            )}
+            <p className="text-xs text-primary-dark/60">
+              Biaya lain dibagi rata ke semua {session.playerIds.length} pemain sesi.
+            </p>
+          </div>
+          <div className="mt-3 space-y-2">
+            {session.additionalCosts.map((a) => (
+              <div
+                key={a.id}
+                className="rounded-lg border-l-4 border-primary-light bg-surface-card p-4 shadow-card"
+              >
+                {editingAdd === a.id ? (
+                  <div className="space-y-2">
+                    <input
+                      value={addNameDraft}
+                      onChange={(e) => setAddNameDraft(e.target.value)}
+                      placeholder="Nama biaya"
+                      aria-label="Nama biaya"
+                      className={`${inputCls} w-full`}
+                    />
+                    <div className="flex gap-2">
+                      <select
+                        value={addCatDraft}
+                        onChange={(e) => setAddCatDraft(e.target.value)}
+                        aria-label="Kategori biaya"
+                        className={`${inputCls} flex-1`}
+                      >
+                        {!(ADD_COST_CATEGORIES as readonly string[]).includes(
+                          addCatDraft,
+                        ) && <option value={addCatDraft}>{addCatDraft}</option>}
+                        {ADD_COST_CATEGORIES.map((c) => (
+                          <option key={c} value={c}>
+                            {c}
+                          </option>
+                        ))}
+                      </select>
+                      <input
+                        value={addAmountDraft}
+                        onChange={(e) => setAddAmountDraft(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && saveAdditional(a.id)}
+                        placeholder="Nominal"
+                        inputMode="numeric"
+                        aria-label="Nominal biaya"
+                        className={`${inputCls} w-32`}
+                      />
+                      <button
+                        onClick={() => saveAdditional(a.id)}
+                        className="press inline-flex shrink-0 items-center justify-center rounded-full bg-primary-bg px-3 text-sm font-extrabold text-primary-dark"
+                        aria-label="Simpan biaya"
+                      >
+                        <CheckIcon className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          setEditingAdd(null);
+                          setAddError("");
+                        }}
+                        className="press inline-flex shrink-0 items-center justify-center rounded-full bg-primary-bg px-3 text-primary-dark/70"
+                        aria-label="Batal ubah biaya"
+                      >
+                        <XIcon className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                    <span className="font-medium text-primary-dark">
+                      {a.name}{" "}
+                      <span className="font-normal text-primary-dark/70">
+                        · {a.category}
+                      </span>
+                    </span>
+                    <span className="flex items-center gap-2 text-primary-dark/70">
+                      {formatIDR(a.amount)}
+                      <button
+                        onClick={() => {
+                          setEditingAdd(a.id);
+                          setAddNameDraft(a.name);
+                          setAddCatDraft(a.category);
+                          setAddAmountDraft(String(a.amount));
+                          setAddError("");
+                        }}
+                        className="text-xs text-primary-dark/60"
+                      >
+                        Ubah
+                      </button>
+                      <button
+                        onClick={() => removeAdditional(a.id)}
+                        className="text-coral"
+                        aria-label="Hapus biaya"
+                      >
+                        <XIcon className="h-4 w-4" />
+                      </button>
+                    </span>
+                  </div>
+                )}
+              </div>
+            ))}
+            {session.additionalCosts.length === 0 && (
+              <p className="text-sm text-primary-dark/60">Belum ada biaya tambahan.</p>
+            )}
           </div>
         </div>
       )}

@@ -318,6 +318,31 @@ test("RLS: a user cannot create a session owned by someone else", async () => {
   await db.close();
 });
 
+test("RLS: only the creator may delete a session", async () => {
+  const db = await freshDb();
+  await seedTwoUsers(db);
+
+  // Non-kreator: RLS tidak melempar error, tapi 0 baris terhapus.
+  await asUser(db, UID_B);
+  const denied = await db.query<{ id: string }>(
+    "delete from public.sessions returning id",
+  );
+  assert.equal(denied.rows.length, 0);
+  await asSuperuser(db);
+  const still = await db.query<{ id: string }>("select id from public.sessions");
+  assert.equal(still.rows.length, 1);
+
+  await asUser(db, UID_A);
+  const allowed = await db.query<{ id: string }>(
+    "delete from public.sessions returning id",
+  );
+  assert.equal(allowed.rows.length, 1);
+  await asSuperuser(db);
+  const gone = await db.query<{ id: string }>("select id from public.sessions");
+  assert.equal(gone.rows.length, 0);
+  await db.close();
+});
+
 /**
  * Project live sudah pernah menjalankan versi file ini yang MEMBUAT kolom
  * `profiles.email` + policy `profiles_select_public`. Migrasi harus tetap
