@@ -31,6 +31,35 @@ npm run build      # production build
 
 Daftar akun di `/register`, lalu buat sesi di `/dashboard`.
 
+## Deploy ke Vercel
+
+1. Import repo GitHub (`Machobotak/badminton-labit`) di Vercel. Framework
+   Next.js terdeteksi otomatis; tidak ada setting build yang perlu diubah.
+2. Tambah tiga *Environment Variable* di **Project Settings → Environment
+   Variables** (scope Production + Preview + Development), nilainya sama
+   dengan `.env.local`:
+
+   | Nama | Nilai |
+   | --- | --- |
+   | `NEXT_PUBLIC_SUPABASE_URL` | `https://<project-ref>.supabase.co` |
+   | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | anon/publishable key |
+   | `SUPABASE_SERVICE_ROLE_KEY` | service_role secret |
+
+   `SUPABASE_SERVICE_ROLE_KEY` **wajib tanpa** prefix `NEXT_PUBLIC_` — prefix
+   itu akan membocorkannya ke bundle browser.
+3. Setelah mendapat domain (`<project>.vercel.app`), buka **Supabase →
+   Authentication → URL Configuration** dan set **Site URL** ke domain itu,
+   plus **Redirect URLs** `https://<domain>/**`. Tanpa langkah ini link
+   konfirmasi email pendaftaran mengarah ke `localhost:3000`.
+4. Kalau **Confirm email** masih aktif di Supabase, pendaftar harus klik link
+   di email dulu sebelum bisa login (UI menampilkan pesan "Cek email untuk
+   konfirmasi"). Matikan **Authentication → Sign In / Providers → Email →
+   Confirm email** bila ingin bisa masuk langsung setelah daftar.
+5. Migration skema (`supabase/migrations/0001_init.sql`) dijalankan sekali di
+   SQL Editor project Supabase — tidak dijalankan otomatis oleh Vercel.
+   **DDL dulu, baru deploy kode**: kalau kode versi baru jalan di atas skema
+   lama, insert tamu adhoc akan gagal `42501`.
+
 ## Arsitektur
 
 - `app/api/**` — API Routes (monolith, Next.js). Semua baca/tulis lewat sini;
