@@ -21,6 +21,9 @@ const TAB_LABEL: Record<Tab, string> = {
   payments: "Bayar",
 };
 
+/** Rasio baku pemakaian kok: 4 pemain menghabiskan 2 butir → 0,5 butir/orang. */
+const PCS_PER_FOUR_PLAYERS = 2;
+
 function DetailBody({ id }: { id: string }) {
   const router = useRouter();
   const tab = (useSearchParams().get("tab") as Tab) || "overview";
@@ -164,12 +167,12 @@ function DetailBody({ id }: { id: string }) {
         ? item.playerIds.filter((x) => x !== pid)
         : [...item.playerIds, pid];
       // Kok: begitu pemain ditambah, butir terpakai dinaikkan ke rasio baku
-      // (1 slope isi 12 habis untuk 4 pemain → 2 butir/orang × n pemain).
+      // "4 pemain menghabiskan 2 butir" → used = round(2n/4) (4 pemain → 2).
       // Tidak pernah diturunkan saat pemain dilepas: pemakaian itu fakta, bukan turunan.
       if (!on && kind === "shuttlecocks" && "used" in item) {
         item.used = Math.max(
           item.used,
-          Math.round((item.packSize * item.playerIds.length) / 4),
+          Math.round((PCS_PER_FOUR_PLAYERS * item.playerIds.length) / 4),
         );
       }
     });

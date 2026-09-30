@@ -126,6 +126,11 @@ satu `price` total tetap terbaca (`rowToSession` menganggap slope berisi 1
 butir yang seluruhnya terpakai), dan akan tersimpan dalam bentuk baru begitu
 disentuh lewat PATCH.
 
+Penugasan pemain ke kok otomatis menaikkan `used` ke rasio baku 4 pemain = 2
+butir (`PCS_PER_FOUR_PLAYERS` di halaman detail), tanpa pernah menurunkannya
+saat pemain dilepas — pemakaian adalah fakta yang dicatat, bukan turunan dari
+jumlah pemain. Tagihan per orang = biaya item ÷ jumlah pemain di item itu.
+
 `profiles` **tidak menyimpan email**. Kolomnya sengaja tidak ada di skema:
 `profiles` dibaca lewat PostgREST dengan anon key yang ikut ter-bundle ke
 browser, jadi kolom duplikat dari `auth.users.email` akan bocor ke pengunjung
