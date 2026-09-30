@@ -1,26 +1,89 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --color-primary: #2BA8A2;
+  --color-primary-light: #3CC4BD;
+  --color-primary-dark: #1E8C86;
+  --color-primary-bg: #E8F6F5;
+  --color-on-accent: #1E8C86;
+  --color-accent: #FFD23F;
+  --color-accent-light: #FFE47A;
+  --color-accent-dark: #E6B800;
+  --color-coral: #EF6C4A;
+  --color-coral-light: #FF8A6A;
+  --color-coral-dark: #D45233;
+  --color-cream: #FFF8E7;
+  --color-sky: #5DADE2;
+  --color-surface-base: #EFF8F7;
+  --color-surface-card: #FFFFFF;
+  --color-success: #27AE60;
+  --color-error: #E74C3C;
+  --shadow-card: 0 4px 20px rgba(43,168,162,0.10);
+  --shadow-teal-glow: 0 4px 20px rgba(43,168,162,0.30);
+  --shadow-coral-glow: 0 4px 20px rgba(239,108,74,0.35);
+  --shadow-accent-glow: 0 4px 20px rgba(255,210,63,0.40);
+  --shadow-focus: 0 0 0 4px rgba(43,168,162,0.15);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+.dark {
+  --color-primary: #2BA8A2;
+  --color-primary-light: #3CC4BD;
+  --color-primary-dark: #E6FFFD;
+  --color-primary-bg: #123B39;
+  --color-on-accent: #1E8C86;
+  --color-accent: #FFD23F;
+  --color-accent-light: #FFE47A;
+  --color-accent-dark: #E6B800;
+  --color-coral: #EF6C4A;
+  --color-coral-light: #FF8A6A;
+  --color-coral-dark: #D45233;
+  --color-cream: #143B39;
+  --color-sky: #7CC4EC;
+  --color-surface-base: #0E2423;
+  --color-surface-card: #16403D;
+  --color-success: #4BD68A;
+  --color-error: #FF7B6B;
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.35);
+  --shadow-teal-glow: 0 4px 20px rgba(43, 168, 162, 0.25);
+  --shadow-coral-glow: 0 4px 20px rgba(239, 108, 74, 0.30);
+  --shadow-accent-glow: 0 4px 20px rgba(255, 210, 63, 0.30);
+  --shadow-focus: 0 0 0 4px rgba(43, 168, 162, 0.25);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.dark body {
+  background: #0E2423;
+  color: #E6FFFD;
+}
+
+.dark select option {
+  background: #16403D;
+  color: #E6FFFD;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: #EFF8F7; /* surface-base */
+  color: #1E8C86;      /* primary-dark, text utama */
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+}
+
+@keyframes row-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animate-row-in {
+  animation: row-in 0.25s ease-out;
+}
+
+.press {
+  transition: transform 0.12s ease-out;
+}
+.press:active {
+  transform: scale(0.95);
 }
