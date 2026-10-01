@@ -11,6 +11,7 @@ import { makeId, shuttleUsedForPlayers } from "../../../lib/db";
 import { useApp } from "../../../lib/useApp";
 import { AlertIcon, ArrowLeftIcon, CheckIcon, ClockIcon, LinkIcon, PlusIcon, QrIcon, UploadIcon, XIcon } from "../../../components/icons";
 import { ConfirmDialog } from "../../../components/ConfirmDialog";
+import { QrImage } from "../../../components/QrImage";
 import {
   badgeCls,
   btnAdd,
@@ -921,7 +922,7 @@ function DetailBody({ id }: { id: string }) {
             <p className="flex items-center gap-1.5 text-sm font-semibold text-fg">
               <QrIcon className="h-5 w-5" /> QR Pembayaran
             </p>
-            <p className="mt-1 text-xs text-fg-subtle">Upload QR (QRIS / e-wallet / m-banking) — temanmu bisa scan dari halaman ini atau halaman join.</p>
+            <p className="mt-1 text-xs text-fg-subtle">Upload QR (QRIS / e-wallet / m-banking) — temanmu bisa scan dari halaman ini atau halaman join. Ketuk gambarnya untuk memperbesar atau mengunduh.</p>
             <input
               ref={qrInputRef}
               type="file"
@@ -931,7 +932,11 @@ function DetailBody({ id }: { id: string }) {
             />
             {session.paymentQr ? (
               <div className="mt-3">
-                <img src={session.paymentQr} alt="QR pembayaran sesi" className="mx-auto w-full max-w-60 rounded-lg border border-border" />
+                <QrImage
+                  src={session.paymentQr}
+                  alt="QR pembayaran sesi"
+                  fileName={`QR ${session.name}`}
+                />
                 <div className="mt-3 flex flex-wrap gap-2">
                   <button onClick={() => qrInputRef.current?.click()} className={`${btnSecondary} flex-1`}>
                     <UploadIcon className="h-4 w-4" /> Ganti QR

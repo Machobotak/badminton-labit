@@ -9,6 +9,7 @@ import { api } from "../../../lib/api";
 import { createClient } from "../../../lib/supabase/client";
 import type { Session, User } from "../../../lib/types";
 import { AlertIcon, ArrowLeftIcon, CheckIcon, ClockIcon, QrIcon, ReceiptIcon, ShuttlecockIcon } from "../../../components/icons";
+import { QrImage } from "../../../components/QrImage";
 import { btnPrimary, cardCls } from "../../../components/ui";
 export default function JoinPage({
   params,
@@ -197,10 +198,11 @@ function JoinBody({ code }: { code: string }) {
           <p className="mt-1 text-xs text-fg-muted">
             {mine ? `Nominalmu: ${formatIDR(mine.total)}` : "Bayar sesuai nominal yang tertera di aplikasi pembayaranmu."}
           </p>
-          <img
+          <QrImage
             src={session.paymentQr}
             alt="QR pembayaran sesi"
-            className="mx-auto mt-3 w-full max-w-60 rounded-lg border border-border"
+            fileName={`QR ${session.name}`}
+            className="mt-3"
           />
         </div>
       ) : (
