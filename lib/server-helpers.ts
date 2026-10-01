@@ -204,3 +204,41 @@ export async function assertProfilesExist(ids: string[]): Promise<void> {
     throw new BadRequest("Ada pemain yang tidak dikenal");
   }
 }
+
+/**
+ * Hapus profil tamu (`auth_id` null) yang sudah tidak dirujuk sesi mana pun.
+ *
+ * Kenapa perlu: baris `profiles` tamu hanya lahir dari dua tempat — wizard
+ * (`POST /api/sessions`, `name` pemain) dan `POST /api/sessions/:id/players`.
+ * Tidak ada satu pun jalur yang memakainya ulang (`profileId` tidak pernah
+ * dikirim klien; halaman join selalu mengirim `name`), jadi tamu yatim = sampah
+ * permanen. Dijalankan setelah sesi benar-benar terhapus, dan hanya menyentuh
+ * `auth_id is null` sehingga akun asli tidak mungkin ikut terhapus.
+ *
+ * Dipanggil setelah penghapusan sukses: kegagalan di sini tidak boleh
+ * menggagalkan operasi utama, jadi cukup dicatat.
+ */
+export async function deleteOrphanGuestProfiles(): Promise<number> {
+  const admin = createServiceRoleClient();
+  const { data, error } = await admin.from("profiles").select("id").is("auth_id", null);
+  if (error) throw error;
+  const guests: { id: string }[] = data ?? [];
+  if (guests.length === 0) return 0;
+
+  const { data: owners, error: sErr } = await admin
+    .from("sessions")
+    .select("player_ids");
+  if (sErr) throw sErr;
+  const referenced = new Set<string>();
+  for (const row of (owners ?? []) as { player_ids: string[] | null }[]) {
+    for (const pid of row.player_ids ?? []) referenced.add(pid);
+  }
+
+  // Saring di klien, bukan lewat filter `not.in`: jumlah pemain per sesi kecil,
+  // dan daftar pengecualian di URL gampang melewati batas panjang.
+  const orphans = guests.filter((g) => !referenced.has(g.id)).map((g) => g.id);
+  if (orphans.length === 0) return 0;
+  const { error: dErr } = await admin.from("profiles").delete().in("id", orphans);
+  if (dErr) throw dErr;
+  return orphans.length;
+}

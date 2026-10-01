@@ -10,6 +10,7 @@ import {
   getSessionRow,
   readBody,
   optStr,
+  deleteOrphanGuestProfiles,
 } from "@/lib/server-helpers";
 import {
   cascadeRemovePlayer,
@@ -144,8 +145,14 @@ export async function PATCH(
 }
 
 /**
- * Hapus sesi. RLS `sessions_delete_creator` membatasi ke kreator, jadi
- * klien user-scoped dipakai — peserta yang bukan kreator akan dapat 404.
+ * Hapus sesi secara permanen (hard delete: baris benar-benar dibuang dari
+ * `public.sessions`, tanpa kolom arsip). RLS `sessions_delete_creator`
+ * membatasi ke kreator, jadi klien user-scoped dipakai — peserta yang bukan
+ * kreator akan dapat 404.
+ *
+ * Setelah sesi hilang, profil tamu (`auth_id` null) yang tadinya hanya dipakai
+ * sesi ini jadi sampah permanen karena tidak ada jalur re-use profil tamu —
+ * maka dibersihkan di sini.
  */
 export async function DELETE(
   _request: Request,
@@ -163,6 +170,13 @@ export async function DELETE(
     if (error) throw error;
     if (!data || data.length === 0)
       return err("Sesi tidak ditemukan atau kamu bukan pembuatnya", 404);
+
+    try {
+      await deleteOrphanGuestProfiles();
+    } catch (cleanupError) {
+      // Sesi sudah terhapus; kegagalan pembersihan tidak boleh mengubah respons.
+      console.error("Gagal membersihkan profil tamu yatim", cleanupError);
+    }
     return Response.json({ ok: true });
   } catch (e) {
     if (e instanceof BadRequest) return err(e.message);
