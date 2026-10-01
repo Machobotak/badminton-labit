@@ -110,14 +110,64 @@ export default function NewSessionPage() {
   }, [name, date, startTime, endTime, location, players, courts, shuttles, adds]);
   const calc = useMemo(() => calculateSession(draftSession), [draftSession]);
 
-  const next = () => {
-    setError("");
-    if (step === 0 && name.trim().length === 0) {
-      setError("Kasih nama sesi dulu ya");
+  /**
+   * Komit ketikan yang masih tertahan di kolom input sebelum pindah langkah.
+   * Tanpa ini, harga yang sudah diketik tapi belum ditekan "+" hilang
+   * diam-diam dan Review menampilkan Rp0. Ketikan yang belum lengkap menahan
+   * di langkah ini dengan pesan — tidak dibuang tanpa jejak.
+   * Kembalikan pesan error, atau "" bila boleh lanjut.
+   */
+  const commitPending = (): string => {
+    if (step === 1) {
+      if (courtPrice.trim().length > 0) {
+        if (Number.isNaN(Number(courtPrice))) return "Harga lapangan harus berupa angka";
+        addCourt();
+        return "";
+      }
+      if (courtName.trim().length > 0) return "Isi harga lapangan dulu, atau kosongkan kolom nama";
+    }
+    if (step === 2) {
+      addPlayer();
+      return "";
+    }
+    if (step === 3) {
+      if (shuttlePrice.trim().length > 0 || shuttleName.trim().length > 0) {
+        if (shuttlePrice.trim().length === 0 || Number.isNaN(Number(shuttlePrice))) {
+          return "Isi harga 1 slope kok dulu, atau kosongkan kolomnya";
+        }
+        const size = Number(shuttleSize);
+        if (shuttleSize.trim().length === 0 || Number.isNaN(size) || size < 1) {
+          return "Isi 1 slope minimal 1 butir";
+        }
+        addShuttle();
+      }
+      return "";
+    }
+    if (step === 4) {
+      const hasName = addName.trim().length > 0;
+      const hasAmount = addAmount.trim().length > 0;
+      if (hasName || hasAmount) {
+        if (!hasName || !hasAmount) return "Lengkapi nama dan nominal biaya";
+        if (Number.isNaN(Number(addAmount))) return "Nominal biaya harus berupa angka";
+        addCost();
+      }
+    }
+    return "";
+  };
+
+   const next = () => {
+     setError("");
+     if (step === 0 && name.trim().length === 0) {
+       setError("Kasih nama sesi dulu ya");
+       return;
+     }
+    const blocked = commitPending();
+    if (blocked) {
+      setError(blocked);
       return;
     }
-    setStep((s) => Math.min(s + 1, STEPS.length - 1));
-  };
+     setStep((s) => Math.min(s + 1, STEPS.length - 1));
+   };
 
   const addCourt = () => {
     if (courtPrice.trim().length === 0 || Number.isNaN(Number(courtPrice))) {
@@ -131,6 +181,30 @@ export default function NewSessionPage() {
     ]);
     setCourtName("");
     setCourtPrice("");
+  };
+
+  const addPlayer = () => {
+    if (!playerName.trim()) return;
+    setPlayers((p) => [...p, playerName.trim()]);
+    setPlayerName("");
+  };
+
+  const addCost = () => {
+    if (
+      addName.trim().length === 0 ||
+      addAmount.trim().length === 0 ||
+      Number.isNaN(Number(addAmount))
+    ) {
+      setError("Lengkapi nama dan nominal biaya");
+      return;
+    }
+    setError("");
+    setAdds((a) => [
+      ...a,
+      { id: makeId(), name: addName.trim(), category: addCat, amount: Number(addAmount) },
+    ]);
+    setAddName("");
+    setAddAmount("");
   };
 
   const addShuttle = () => {
@@ -289,8 +363,8 @@ export default function NewSessionPage() {
         {step === 2 && (
           <div>
             <div className="flex gap-2">
-              <input value={playerName} onChange={(e) => setPlayerName(e.target.value)} placeholder="Nama pemain" className={inputCls} onKeyDown={(e) => { if (e.key === "Enter" && playerName.trim()) { setPlayers((p) => [...p, playerName.trim()]); setPlayerName(""); } }} />
-              <button onClick={() => { if (!playerName.trim()) return; setPlayers((p) => [...p, playerName.trim()]); setPlayerName(""); }} className={addBtn} aria-label="Tambah pemain"><PlusIcon className="h-4 w-4" /></button>
+              <input value={playerName} onChange={(e) => setPlayerName(e.target.value)} placeholder="Nama pemain" className={inputCls} onKeyDown={(e) => { if (e.key === "Enter") addPlayer(); }} />
+              <button onClick={addPlayer} className={addBtn} aria-label="Tambah pemain"><PlusIcon className="h-4 w-4" /></button>
             </div>
             <p className="mt-1 text-xs text-primary-dark/60">Pemain pertama = kamu ({data ? currentUser(data)?.name : ""}).</p>
             <div className="mt-3 space-y-2">
@@ -341,7 +415,7 @@ export default function NewSessionPage() {
                 </select>
                 <input value={addAmount} onChange={(e) => setAddAmount(e.target.value)} placeholder="Nominal" inputMode="numeric" className={`${inputCls} w-32`} />
               </div>
-              <button onClick={() => { if (addName.trim().length === 0 || addAmount.trim().length === 0 || Number.isNaN(Number(addAmount))) { setError("Lengkapi nama dan nominal biaya"); return; } setError(""); setAdds((a) => [...a, { id: makeId(), name: addName.trim(), category: addCat, amount: Number(addAmount) }]); setAddName(""); setAddAmount(""); }} className={`${btnPrimary} gap-1.5`}><PlusIcon className="h-4 w-4" /> Tambah biaya</button>
+              <button onClick={addCost} className={`${btnPrimary} gap-1.5`}><PlusIcon className="h-4 w-4" /> Tambah biaya</button>
             </div>
             <div className="mt-3 space-y-2">
               {adds.map((a) => (

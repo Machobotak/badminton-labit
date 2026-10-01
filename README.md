@@ -137,6 +137,12 @@ menugaskan pemain ke kok otomatis menaikkan `used` ke rasio baku
 dilepas — pemakaian adalah fakta yang dicatat, bukan turunan dari jumlah
 pemain. Tagihan per orang = biaya item ÷ jumlah pemain di item itu.
 
+Wizard juga menyertakan ketikan yang masih tertahan di kolom input saat tombol
+"Lanjut" ditekan: harga lapangan/kok atau nama pemain/biaya yang sudah
+diketik tapi belum ditekan tombol "+" ikut tersimpan, tidak dibuang. Ketikan
+yang belum lengkap (mis. nama lapangan tanpa harga) menahan di langkah itu
+dengan pesan, bukan dibuang diam-diam.
+
 Biaya tambahan (`additionalCosts`) dibagi rata ke **semua** `playerIds` sesi
 (bukan per item seperti lapangan/kok): totalnya = jumlah `amount`, tagihan per
 orang = total ÷ jumlah pemain. Bisa ditambah/diubah/dihapus dari tab "Biaya
