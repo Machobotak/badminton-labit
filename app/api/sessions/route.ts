@@ -157,7 +157,11 @@ export async function GET() {
  * Buat sesi baru. Mirror wizard lama:
  * - players[0] = kreator (profil sendiri)
  * - sisanya = tamu adhoc (baris profiles baru, auth_id null)
- * - courts/shuttles/adds diberi id fresh, playerIds kosong
+ * - courts/shuttles/adds diberi id fresh
+ * - lapangan & kok langsung ditugaskan ke SEMUA pemain sesi: wizard tidak
+ *   punya langkah penugasan, jadi tanpa ini tagihan per orang = Rp0 dan
+ *   seluruh biaya lapangan tampil sebagai "belum terbagi" tepat setelah sesi
+ *   dibuat. Penugasan tetap bisa diubah di tab Lapangan/Kok halaman detail.
  * - payments semua "pending"
  */
 export async function POST(request: Request) {
@@ -174,13 +178,9 @@ export async function POST(request: Request) {
     const notes = optStr(body, "notes", 1000);
     const playerNames = reqPlayerNames(body);
     const draftCourts = reqDraftItems(body, "courts");
-    const shuttleList = sanitizeShuttleDrafts(reqDraftShuttles(body));
+    const draftShuttles = reqDraftShuttles(body);
     const draftAdds = reqDraftAdds(body);
 
-    // Buat tamu adhoc: playerNames[0] = kreator. Normalisasi sanitizer.
-    const courtList = sanitizeCourts(
-      draftCourts.map((c) => ({ name: c.name, price: c.price })),
-    );
     const addList = sanitizeAdds(
       draftAdds.map((a) => ({
         name: a.name,
@@ -209,6 +209,14 @@ export async function POST(request: Request) {
       const created: Pick<DbProfileRow, "id"> = data;
       playerIds.push(created.id);
     }
+
+    // Lapangan & kok ditugaskan ke SEMUA pemain sesi: wizard tidak punya
+    // langkah penugasan, jadi tanpa ini tagihan per orang = Rp0 dan seluruh
+    // biaya lapangan tampil "belum terbagi" tepat setelah sesi dibuat.
+    const courtList = sanitizeCourts(
+      draftCourts.map((c) => ({ name: c.name, price: c.price, playerIds })),
+    );
+    const shuttleList = sanitizeShuttleDrafts(draftShuttles, playerIds);
 
     const payments: Record<string, PayStatus> = {};
     for (const pid of playerIds) payments[pid] = "pending";

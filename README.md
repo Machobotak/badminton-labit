@@ -126,10 +126,16 @@ satu `price` total tetap terbaca (`rowToSession` menganggap slope berisi 1
 butir yang seluruhnya terpakai), dan akan tersimpan dalam bentuk baru begitu
 disentuh lewat PATCH.
 
-Penugasan pemain ke kok otomatis menaikkan `used` ke rasio baku 4 pemain = 2
-butir (`PCS_PER_FOUR_PLAYERS` di halaman detail), tanpa pernah menurunkannya
-saat pemain dilepas — pemakaian adalah fakta yang dicatat, bukan turunan dari
-jumlah pemain. Tagihan per orang = biaya item ÷ jumlah pemain di item itu.
+Pembuatan sesi lewat wizard langsung menugaskan setiap lapangan dan kok ke
+**semua** pemain sesi, dan kok langsung diberi `used` rasio baku
+(`round(2n/4)`, 4 pemain → 2 butir). Alasannya: wizard tidak punya langkah
+penugasan, sehingga tanpa prefill ini tagihan per orang keluar Rp0 dan seluruh
+biaya lapangan tampil "belum terbagi" tepat setelah sesi dibuat. Alokasi
+setelahnya tetap bisa diubah per item di tab Lapangan/Kok halaman detail;
+menugaskan pemain ke kok otomatis menaikkan `used` ke rasio baku
+(`PCS_PER_FOUR_PLAYERS` di `lib/db`), tanpa pernah menurunkannya saat pemain
+dilepas — pemakaian adalah fakta yang dicatat, bukan turunan dari jumlah
+pemain. Tagihan per orang = biaya item ÷ jumlah pemain di item itu.
 
 Biaya tambahan (`additionalCosts`) dibagi rata ke **semua** `playerIds` sesi
 (bukan per item seperti lapangan/kok): totalnya = jumlah `amount`, tagihan per

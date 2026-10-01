@@ -7,7 +7,7 @@ import { calculateSession, formatIDR, shuttleItemCost, shuttleUnitPrice } from "
 import { formatDateID, timeRange } from "../../../lib/format";
 import { ADD_COST_CATEGORIES, type Session } from "../../../lib/types";
 import { currentUser, removePlayer, togglePaid } from "../../../lib/mutations";
-import { makeId } from "../../../lib/db";
+import { makeId, shuttleUsedForPlayers } from "../../../lib/db";
 import { useApp } from "../../../lib/useApp";
 import { AlertIcon, ArrowLeftIcon, CheckIcon, ClockIcon, LinkIcon, PlusIcon, QrIcon, UploadIcon, XIcon } from "../../../components/icons";
 
@@ -28,9 +28,6 @@ const TAB_LABEL: Record<Tab, string> = {
   additional: "Biaya Lain",
   payments: "Bayar",
 };
-
-/** Rasio baku pemakaian kok: 4 pemain menghabiskan 2 butir → 0,5 butir/orang. */
-const PCS_PER_FOUR_PLAYERS = 2;
 
 function DetailBody({ id }: { id: string }) {
   const router = useRouter();
@@ -191,12 +188,12 @@ function DetailBody({ id }: { id: string }) {
         ? item.playerIds.filter((x) => x !== pid)
         : [...item.playerIds, pid];
       // Kok: begitu pemain ditambah, butir terpakai dinaikkan ke rasio baku
-      // "4 pemain menghabiskan 2 butir" → used = round(2n/4) (4 pemain → 2).
-      // Tidak pernah diturunkan saat pemain dilepas: pemakaian itu fakta, bukan turunan.
+      // "4 pemain menghabiskan 2 butir". Tidak pernah diturunkan saat pemain
+      // dilepas: pemakaian itu fakta, bukan turunan.
       if (!on && kind === "shuttlecocks" && "used" in item) {
         item.used = Math.max(
           item.used,
-          Math.round((PCS_PER_FOUR_PLAYERS * item.playerIds.length) / 4),
+          shuttleUsedForPlayers(item.playerIds.length),
         );
       }
     });

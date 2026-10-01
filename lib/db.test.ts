@@ -7,8 +7,10 @@ import {
   sanitizeAdds,
   sanitizeCourts,
   sanitizePayments,
+  sanitizeShuttleDrafts,
   sanitizeShuttles,
   sanitizeStatus,
+  shuttleUsedForPlayers,
   type DbSessionRow,
 } from "./db.ts";
 import type { Session } from "./types.ts";
@@ -109,4 +111,30 @@ test("sanitizers coerce numbers and reject malformed payloads", () => {
   assert.throws(() => sanitizePayments({ p1: "lunas" }));
   assert.equal(sanitizeStatus("active"), "active");
   assert.throws(() => sanitizeStatus("batal"));
+});
+
+test("shuttleUsedForPlayers follows the 2-butir-per-4-pemain ratio", () => {
+  assert.equal(shuttleUsedForPlayers(0), 0);
+  assert.equal(shuttleUsedForPlayers(4), 2);
+  assert.equal(shuttleUsedForPlayers(5), 3);
+});
+
+test("sanitizeShuttleDrafts assigns each draft kok to the session players", () => {
+  // Wizard tidak punya langkah penugasan: tanpa prefill ini biaya kok jatuh
+  // ke nol dan tagihan per orang Rp0 tepat setelah sesi dibuat.
+  const players = ["p1", "p2", "p3", "p4"];
+  const [drafted] = sanitizeShuttleDrafts(
+    [{ name: "Kok A", packPrice: 96000, packSize: 12 }],
+    players,
+  );
+  assert.equal(drafted.used, 2);
+  assert.deepEqual(drafted.playerIds, players);
+  assert.equal(drafted.packPrice, 96000);
+
+  const [empty] = sanitizeShuttleDrafts(
+    [{ name: "Kok A", packPrice: 96000, packSize: 12 }],
+    [],
+  );
+  assert.equal(empty.used, 0);
+  assert.deepEqual(empty.playerIds, []);
 });

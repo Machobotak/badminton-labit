@@ -8,6 +8,22 @@ import type {
   User,
 } from "./types";
 
+/**
+ * Rasio baku pemakaian kok: 4 pemain menghabiskan 2 butir → 0,5 butir/orang.
+ * Dipakai saat membuat sesi (prefill `used`) dan saat menugaskan pemain ke kok
+ * di halaman detail.
+ */
+export const PCS_PER_FOUR_PLAYERS = 2;
+
+/**
+ * Butir kok rasio baku untuk n pemain: round(2n/4) — 4 pemain → 2 butir.
+ * Dipakai lockstep oleh wizard (pratinjau), route create, dan `toggleAssign`
+ * di halaman detail; ketidakcocokan ketiganya justru akar bug harga Rp0.
+ */
+export function shuttleUsedForPlayers(playerCount: number): number {
+  return Math.round((PCS_PER_FOUR_PLAYERS * playerCount) / 4);
+}
+
 /** Baris `public.profiles` (snake_case, sesuai migration 0001). */
 export interface DbProfileRow {
   id: string;
@@ -213,18 +229,21 @@ export function sanitizeShuttles(v: unknown): Shuttle[] {
 }
 
 /**
- * Draft dari wizard "Buat Sesi": kok belum dipakai siapa pun, jadi
- * `used` + `playerIds` diisi kosong oleh `sanitizeShuttles`.
+ * Draft dari wizard "Buat Sesi": wizard tidak punya langkah penugasan, jadi
+ * tiap kok langsung ditugaskan ke semua pemain sesi dengan `used` rasio baku
+ * — tanpa ini tagihan kok per orang = Rp0 tepat setelah sesi dibuat.
  */
 export function sanitizeShuttleDrafts(
   draft: { name: string; packPrice: number; packSize: number }[],
+  playerIds: string[] = [],
 ): Shuttle[] {
   return sanitizeShuttles(
     draft.map((k) => ({
       name: k.name,
       packPrice: k.packPrice,
       packSize: k.packSize,
-      used: 0,
+      used: shuttleUsedForPlayers(playerIds.length),
+      playerIds,
     })),
   );
 }

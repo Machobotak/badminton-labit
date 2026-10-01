@@ -36,6 +36,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# oh-my-pi (omp) personal MCP config
+.omp/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

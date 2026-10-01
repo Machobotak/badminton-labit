@@ -7,7 +7,7 @@ import { ADD_COST_CATEGORIES, type Session } from "../../../lib/types";
 import { currentUser } from "../../../lib/mutations";
 import { useApp } from "../../../lib/useApp";
 import { api } from "../../../lib/api";
-import { makeId } from "../../../lib/db";
+import { makeId, shuttleUsedForPlayers } from "../../../lib/db";
 import { AlertIcon, ArrowLeftIcon, ArrowRightIcon, PlusIcon, XIcon } from "../../../components/icons";
 
 const STEPS = ["Info", "Lapangan", "Pemain", "Kok", "Biaya Lain", "Review"] as const;
@@ -68,8 +68,14 @@ export default function NewSessionPage() {
   const [addCat, setAddCat] = useState<string>(ADD_COST_CATEGORIES[0]);
   const [addAmount, setAddAmount] = useState("");
 
-  const draftSession: Session = useMemo(
-    () => ({
+  /**
+   * Pratinjau memakai alokasi yang sama dengan yang disimpan server:
+   * lapangan & kok ditugaskan ke semua pemain, jadi Review sudah menunjukkan
+   * tagihan per orang yang sebenarnya (bukan Rp0 karena item belum ditugaskan).
+   */
+  const draftSession: Session = useMemo(() => {
+    const ids = players.map((_, i) => `draft-p${i}`);
+    return {
       id: "draft",
       name,
       date,
@@ -78,20 +84,20 @@ export default function NewSessionPage() {
       location,
       status: "upcoming",
       shareCode: "-----",
-      playerIds: players.map((_, i) => `draft-p${i}`),
+      playerIds: ids,
       courts: courts.map((c) => ({
         id: c.id,
         name: c.name,
         price: c.price,
-        playerIds: [],
+        playerIds: ids,
       })),
       shuttlecocks: shuttles.map((k) => ({
         id: k.id,
         name: k.name,
         packPrice: k.packPrice,
         packSize: k.packSize,
-        used: 0,
-        playerIds: [],
+        used: shuttleUsedForPlayers(ids.length),
+        playerIds: ids,
       })),
       additionalCosts: adds.map((a) => ({
         id: a.id,
@@ -100,9 +106,8 @@ export default function NewSessionPage() {
         amount: a.amount,
       })),
       payments: {},
-    }),
-    [name, date, startTime, endTime, location, players, courts, shuttles, adds],
-  );
+    };
+  }, [name, date, startTime, endTime, location, players, courts, shuttles, adds]);
   const calc = useMemo(() => calculateSession(draftSession), [draftSession]);
 
   const next = () => {
@@ -360,11 +365,8 @@ export default function NewSessionPage() {
               <p className="text-xs text-primary-dark/70">{date} · {startTime}–{endTime} · {location || "-"}</p>
               <div className="mt-3 space-y-1 text-sm text-primary-dark">
                 <div className="flex justify-between"><span>Total biaya</span><span className="font-extrabold text-primary-dark">{formatIDR(calc.totalCost)}</span></div>
-                <div className="flex justify-between"><span>{players.length} pemain</span><span className="font-semibold">{players.length > 0 ? formatIDR(Math.max(...Object.values(calc.perPlayer).map((p) => p.total), 0)) + " maks/orang" : "-"}</span></div>
-                {calc.unallocated > 0 && <p className="flex items-center gap-1.5 rounded-lg bg-accent-light/40 px-2 py-1 text-xs text-accent-dark"><AlertIcon className="h-4 w-4 shrink-0" /> {formatIDR(calc.unallocated)} belum terbagi (lapangan/kok tanpa pemain — atur di halaman detail).</p>}
-                {courts.length > 0 && (
-                  <p className="flex items-center gap-1.5 rounded-lg bg-accent-light/40 px-2 py-1 text-xs text-accent-dark"><AlertIcon className="h-4 w-4 shrink-0" /> Lapangan belum ditugaskan ke pemain — atur di halaman detail.</p>
-                )}
+                <div className="flex justify-between"><span>{players.length} pemain</span><span className="font-semibold">{players.length > 0 ? formatIDR(Math.round(calc.totalCost / players.length)) + " rata-rata/orang" : "-"}</span></div>
+                {calc.unallocated > 0 && <p className="flex items-center gap-1.5 rounded-lg bg-accent-light/40 px-2 py-1 text-xs text-accent-dark"><AlertIcon className="h-4 w-4 shrink-0" /> {formatIDR(calc.unallocated)} belum terbagi — tambahkan pemain dulu agar bisa dihitung per orang.</p>}
               </div>
             </div>
             <div className="mt-3 space-y-1.5">
