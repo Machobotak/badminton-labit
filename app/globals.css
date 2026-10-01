@@ -16,7 +16,6 @@
 @theme {
   /* Merek */
   --color-primary: #107d77;
-  --color-primary-light: #45b8b1;
   --color-primary-dark: #0c6a65;
   --color-primary-bg: #eef6f5;
 
@@ -68,7 +67,6 @@
 
 .dark {
   --color-primary: #4fd1c7;
-  --color-primary-light: #2f5d58;
   --color-primary-dark: #5fdcd2;
   --color-primary-bg: #17332f;
 
