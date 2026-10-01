@@ -73,7 +73,7 @@ export default function ThemeToggle() {
     <button
       onClick={() => setDark((d) => !d)}
       aria-label={dark ? "Ganti ke mode terang" : "Ganti ke mode gelap"}
-      className="press inline-flex h-9 w-9 items-center justify-center rounded-full border border-primary-light/40 bg-surface-card text-primary-dark shadow-card"
+      className="press inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-surface-card text-fg-muted hover:bg-neutral-bg hover:text-fg"
     >
       {dark ? <SunIcon className="h-4 w-4" /> : <MoonIcon className="h-4 w-4" />}
     </button>

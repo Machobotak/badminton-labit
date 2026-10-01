@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { createClient } from "../../lib/supabase/client";
 import { ShuttlecockIcon } from "../../components/icons";
+import { btnPrimary, inputCls, labelCls } from "../../components/ui";
 
 function RegisterForm() {
   const router = useRouter();
@@ -63,17 +64,17 @@ function RegisterForm() {
 
   return (
     <main className="py-10 md:py-16">
-      <p className="flex items-center gap-2 text-sm font-extrabold text-primary-dark">
-        <ShuttlecockIcon className="h-5 w-5" />
+      <span className="inline-flex items-center gap-2 rounded-full border border-border bg-surface-card px-3 py-1 text-xs font-medium text-fg-muted">
+        <ShuttlecockIcon className="h-4 w-4 text-primary" />
         Badminton Split
-      </p>
-      <h1 className="mt-2 text-2xl font-extrabold text-primary-dark">Daftar</h1>
-      <p className="mt-1 text-sm text-primary-dark/70">
+      </span>
+      <h1 className="mt-4 text-2xl font-semibold tracking-tight text-fg">Daftar</h1>
+      <p className="mt-1 text-sm text-fg-muted">
         Buat akun untuk mulai mencatat sesi badminton.
       </p>
-      <form onSubmit={submit} className="mt-6 space-y-3">
+      <form onSubmit={submit} className="mt-6 space-y-4">
         <div>
-          <label className="text-sm font-extrabold text-primary-dark" htmlFor="reg-name">
+          <label className={labelCls} htmlFor="reg-name">
             Nama
           </label>
           <input
@@ -81,11 +82,11 @@ function RegisterForm() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="cth. Rina"
-            className="mt-1 w-full rounded-lg border-2 border-primary-light bg-cream px-4 py-2.5 text-sm text-primary-dark outline-none placeholder:text-primary-dark/50 focus:border-primary focus:shadow-focus"
+            className={`${inputCls} mt-1.5`}
           />
         </div>
         <div>
-          <label className="text-sm font-extrabold text-primary-dark" htmlFor="reg-email">
+          <label className={labelCls} htmlFor="reg-email">
             Email
           </label>
           <input
@@ -94,11 +95,11 @@ function RegisterForm() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="cth. rina@example.com"
-            className="mt-1 w-full rounded-lg border-2 border-primary-light bg-cream px-4 py-2.5 text-sm text-primary-dark outline-none placeholder:text-primary-dark/50 focus:border-primary focus:shadow-focus"
+            className={`${inputCls} mt-1.5`}
           />
         </div>
         <div>
-          <label className="text-sm font-extrabold text-primary-dark" htmlFor="reg-pass">
+          <label className={labelCls} htmlFor="reg-pass">
             Password
           </label>
           <input
@@ -107,22 +108,30 @@ function RegisterForm() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="minimal 6 karakter"
-            className="mt-1 w-full rounded-lg border-2 border-primary-light bg-cream px-4 py-2.5 text-sm text-primary-dark outline-none placeholder:text-primary-dark/50 focus:border-primary focus:shadow-focus"
+            className={`${inputCls} mt-1.5`}
           />
         </div>
-        {error && <p className="text-sm text-error">{error}</p>}
-        {notice && <p className="text-sm text-primary-dark">{notice}</p>}
+        {error && (
+          <p className="rounded-lg bg-feedback-bg px-3 py-2 text-sm text-error">
+            {error}
+          </p>
+        )}
+        {notice && (
+          <p className="rounded-lg bg-success-bg px-3 py-2 text-sm text-success">
+            {notice}
+          </p>
+        )}
         <button
           type="submit"
           disabled={busy}
-          className="press inline-flex w-full items-center justify-center rounded-full bg-gradient-to-b from-accent-light to-accent px-6 py-3 text-sm font-extrabold text-on-accent shadow-accent-glow disabled:opacity-60"
+          className={`${btnPrimary} w-full`}
         >
           {busy ? "Memproses…" : "Buat akun"}
         </button>
       </form>
-      <p className="mt-6 text-center text-sm text-primary-dark/70">
+      <p className="mt-6 text-center text-sm text-fg-muted">
         Sudah punya akun?{" "}
-        <Link href="/login" className="font-extrabold text-primary-dark hover:underline">
+        <Link href="/login" className="font-semibold text-primary hover:underline">
           Masuk
         </Link>
       </p>

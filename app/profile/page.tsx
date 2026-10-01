@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { currentUser } from "../../lib/mutations";
 import { useApp } from "../../lib/useApp";
 import { createClient } from "../../lib/supabase/client";
+import { btnPrimary, btnSecondary, cardCls, inputCls } from "../../components/ui";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -38,55 +39,62 @@ export default function ProfilePage() {
   };
 
   if (loading || !data || !me) {
-    return <main className="py-10 text-sm text-primary-dark/70">Memuat…</main>;
+    return <main className="py-10 text-sm text-fg-muted">Memuat…</main>;
   }
 
   return (
     <main className="py-6 md:py-10">
-      <h1 className="text-xl font-extrabold text-primary-dark">Profil</h1>
-      <div className="mt-4 rounded-lg border-l-4 border-primary-light bg-surface-card p-4 shadow-card">
-        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary-bg text-xl font-extrabold text-primary-dark">
-          {me.name.slice(0, 1).toUpperCase()}
+      <h1 className="text-xl font-semibold tracking-tight text-fg">Profil</h1>
+
+      <div className={`mt-4 ${cardCls}`}>
+        <div className="flex items-center gap-3">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary-bg text-base font-semibold text-primary">
+            {me.name.slice(0, 1).toUpperCase()}
+          </span>
+          <div className="min-w-0">
+            <p className="truncate font-semibold text-fg">{me.name}</p>
+            <p className="truncate text-sm text-fg-muted">
+              {data.currentUserEmail ?? "tanpa email"}
+            </p>
+          </div>
         </div>
+
         {editing ? (
-          <div className="mt-3 flex gap-2">
+          <form
+            className="mt-4 flex flex-col gap-2 sm:flex-row"
+            onSubmit={(e) => {
+              e.preventDefault();
+              void saveName();
+            }}
+          >
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-lg border-2 border-primary-light bg-cream px-4 py-2.5 text-sm text-primary-dark outline-none placeholder:text-primary-dark/50 focus:border-primary focus:shadow-focus"
+              placeholder="Nama baru"
+              aria-label="Nama baru"
+              className={inputCls}
             />
             <button
-              onClick={saveName}
+              type="submit"
               disabled={saving}
-              className="press inline-flex items-center justify-center rounded-full bg-gradient-to-b from-accent-light to-accent px-6 py-3 text-sm font-extrabold text-on-accent shadow-accent-glow disabled:opacity-60"
+              className={`${btnPrimary} shrink-0 sm:px-5`}
             >
-              {saving ? "…" : "Simpan"}
+              {saving ? "Menyimpan…" : "Simpan"}
             </button>
-          </div>
+          </form>
         ) : (
-          <div className="mt-3 flex items-center justify-between">
-            <div>
-              <p className="font-extrabold text-primary-dark">{me.name}</p>
-              <p className="text-sm text-primary-dark/70">{data.currentUserEmail ?? "tanpa email"}</p>
-            </div>
-            <button
-              onClick={() => setName(me.name)}
-              className="press inline-flex items-center justify-center rounded-full border-2 border-primary px-6 py-3 text-sm font-extrabold text-primary-dark hover:bg-primary-bg"
-            >
-              Ubah
-            </button>
-          </div>
+          <button
+            onClick={() => setName(me.name)}
+            className={`${btnSecondary} mt-4 w-full`}
+          >
+            Ubah
+          </button>
         )}
       </div>
 
-      <div className="mt-4 space-y-2">
-        <button
-          onClick={logout}
-          className="press inline-flex w-full items-center justify-center rounded-full border-2 border-primary px-6 py-3 text-sm font-extrabold text-primary-dark hover:bg-primary-bg"
-        >
-          Keluar
-        </button>
-      </div>
+      <button onClick={logout} className={`${btnSecondary} mt-4 w-full`}>
+        Keluar
+      </button>
     </main>
   );
 }

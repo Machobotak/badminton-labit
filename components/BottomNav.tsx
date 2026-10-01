@@ -13,8 +13,9 @@ export default function BottomNav() {
   const item = (href: string, label: string, icon: ReactNode, active: boolean) => (
     <Link
       href={href}
-      className={`flex flex-1 flex-col items-center gap-0.5 py-2 text-xs font-medium ${
-        active ? "text-primary" : "text-primary-dark/60"
+      aria-current={active ? "page" : undefined}
+      className={`press flex flex-1 flex-col items-center gap-1 rounded-lg py-2 text-xs font-medium ${
+        active ? "text-primary" : "text-fg-subtle"
       }`}
     >
       <span className="leading-none">{icon}</span>
@@ -22,8 +23,8 @@ export default function BottomNav() {
     </Link>
   );
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-10 border-t border-primary-light/40 bg-surface-card md:hidden">
-      <div className="mx-auto flex max-w-md px-2">
+    <nav className="fixed inset-x-0 bottom-0 z-10 border-t border-border bg-surface-card pb-[env(safe-area-inset-bottom)] md:hidden">
+      <div className="mx-auto flex max-w-md px-2 py-1">
         {item("/dashboard", "Dashboard", <HomeIcon className="h-5 w-5" />, path === "/dashboard")}
         {item("/sessions/new", "Buat", <PlusIcon className="h-5 w-5" />, path === "/sessions/new")}
         {item("/profile", "Profil", <UserIcon className="h-5 w-5" />, path === "/profile")}

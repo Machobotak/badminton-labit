@@ -11,7 +11,21 @@ import { makeId, shuttleUsedForPlayers } from "../../../lib/db";
 import { useApp } from "../../../lib/useApp";
 import { AlertIcon, ArrowLeftIcon, CheckIcon, ClockIcon, LinkIcon, PlusIcon, QrIcon, UploadIcon, XIcon } from "../../../components/icons";
 import { ConfirmDialog } from "../../../components/ConfirmDialog";
-
+import {
+  badgeCls,
+  btnAdd,
+  btnDanger,
+  btnIcon,
+  btnPrimary,
+  btnSecondary,
+  cardCls,
+  chipCls,
+  chipState,
+  inputCls,
+  inputCompactCls,
+  pillCls,
+  pillState,
+} from "../../../components/ui";
 const TABS = [
   "overview",
   "players",
@@ -81,14 +95,25 @@ function DetailBody({ id }: { id: string }) {
   }, [data, me, id, router]);
 
   if (loadError)
-    return <main className="py-10 text-sm text-coral">Gagal memuat data: {loadError}</main>;
+    return (
+      <main className="py-6 md:py-10">
+        <p className="rounded-lg bg-feedback-bg px-3 py-2 text-sm text-error">
+          Gagal memuat data: {loadError}
+        </p>
+      </main>
+    );
   if (loading || !data || !me)
-    return <main className="py-10 text-sm text-primary-dark/70">Memuat…</main>;
+    return <main className="py-6 text-sm text-fg-muted md:py-10">Memuat…</main>;
   if (!session)
     return (
-      <main className="py-10 text-center">
-        <p className="font-extrabold text-primary-dark">Sesi tidak ditemukan</p>
-        <Link href="/dashboard" className="mt-2 inline-flex items-center gap-1.5 text-sm font-extrabold text-primary-dark hover:underline"><ArrowLeftIcon className="h-4 w-4" /> Kembali ke dashboard</Link>
+      <main className="py-6 text-center md:py-10">
+        <p className="font-semibold text-fg">Sesi tidak ditemukan</p>
+        <Link
+          href="/dashboard"
+          className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+        >
+          <ArrowLeftIcon className="h-4 w-4" /> Kembali ke dashboard
+        </Link>
       </main>
     );
 
@@ -286,33 +311,28 @@ function DetailBody({ id }: { id: string }) {
     }
   };
 
-  const inputCls =
-    "rounded-lg border-2 border-primary-light bg-cream px-4 py-2 text-sm text-primary-dark outline-none placeholder:text-primary-dark/50 focus:border-primary focus:shadow-focus";
-  const addBtn =
-    "press inline-flex shrink-0 items-center justify-center rounded-full bg-gradient-to-b from-accent-light to-accent px-4 text-sm font-extrabold text-on-accent shadow-accent-glow";
   const statusTag =
     session.status === "completed"
-      ? "bg-primary-bg text-primary-dark"
+      ? "bg-neutral-bg text-primary-dark"
       : session.status === "active"
-        ? "bg-primary-light text-primary-dark"
+        ? "bg-primary-bg text-primary-dark"
         : "bg-accent-light text-accent-dark";
 
   const assignList = (
     kind: "courts" | "shuttlecocks",
     item: { id: string; playerIds: string[]; paidBy?: string },
   ) => (
-    <div className="mt-2 border-t border-primary-light/40 pt-2">
-      <p className="text-xs font-medium text-primary-dark/70">Siapa main di sini?</p>
-      <div className="mt-1.5 flex flex-wrap gap-1.5">
+    <div className="mt-3 border-t border-border pt-3">
+      <p className="text-xs font-medium text-fg-muted">Siapa main di sini?</p>
+      <div className="mt-2 flex flex-wrap gap-1.5">
         {session.playerIds.map((pid) => {
           const on = item.playerIds.includes(pid);
           return (
             <button
               key={pid}
               onClick={() => toggleAssign(kind, item.id, pid)}
-              className={`press rounded-full px-3 py-1 text-xs font-bold ${
-                on ? "bg-primary text-white shadow-teal-glow" : "bg-primary-bg text-primary-dark"
-              }`}
+              aria-pressed={on}
+              className={`${chipCls} ${chipState(on)}`}
             >
               {userName(pid)}
             </button>
@@ -320,10 +340,14 @@ function DetailBody({ id }: { id: string }) {
         })}
       </div>
       {item.playerIds.length === 0 && (
-        <p className="mt-1.5 flex items-center gap-1 text-xs font-medium text-coral"><AlertIcon className="h-3.5 w-3.5" /> Belum ada pemain di item ini</p>
+        <p className="mt-2 flex items-center gap-1 text-xs font-medium text-error">
+          <AlertIcon className="h-3.5 w-3.5" /> Belum ada pemain di item ini
+        </p>
       )}
-      <div className="mt-2 flex items-center gap-2">
-        <label className="text-xs text-primary-dark/70" htmlFor={`paidby-${kind}-${item.id}`}>Siapa yang nombok?</label>
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <label className="text-xs text-fg-muted" htmlFor={`paidby-${kind}-${item.id}`}>
+          Siapa yang nombok?
+        </label>
         <select
           id={`paidby-${kind}-${item.id}`}
           value={item.paidBy ?? ""}
@@ -335,7 +359,7 @@ function DetailBody({ id }: { id: string }) {
               if (it) it.paidBy = e.target.value || undefined;
             })
           }
-          className="rounded-lg border border-primary-light bg-cream px-2 py-1 text-xs text-primary-dark"
+          className={`${inputCls} w-auto py-1 text-xs`}
         >
           <option value="">—</option>
           {session.playerIds.map((pid) => (
@@ -345,7 +369,7 @@ function DetailBody({ id }: { id: string }) {
           ))}
         </select>
         {item.paidBy && (
-          <span className="text-xs font-bold text-primary-dark">
+          <span className="text-xs font-medium text-fg">
             Ditalangi {userName(item.paidBy)}
           </span>
         )}
@@ -355,31 +379,34 @@ function DetailBody({ id }: { id: string }) {
 
   return (
     <main className="py-6 md:py-10">
-      <Link href="/dashboard" className="inline-flex items-center gap-1.5 text-sm font-medium text-primary-dark/70 hover:text-primary-dark hover:underline">
+      <Link
+        href="/dashboard"
+        className="press inline-flex items-center gap-1.5 text-sm text-fg-muted hover:text-fg"
+      >
         <ArrowLeftIcon className="h-4 w-4" /> Dashboard
       </Link>
-      <div className="mt-1 flex items-start justify-between gap-2">
-        <div>
-          <h1 className="text-2xl font-extrabold text-primary-dark">{session.name}</h1>
-          <p className="mt-0.5 text-xs text-primary-dark/70">
+
+      <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-2xl font-semibold tracking-tight text-fg">
+              {session.name}
+            </h1>
+            <span className={`${badgeCls} ${statusTag}`}>{session.status}</span>
+          </div>
+          <p className="mt-1 text-xs text-fg-muted">
             {formatDateID(session.date)} · {timeRange(session.startTime, session.endTime)} · {session.location}
           </p>
         </div>
-        <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold capitalize ${statusTag}`}>
-          {session.status}
-        </span>
-      </div>
-
-      {session.creatorId === me.id && (
-        <div className="mt-3">
+        {session.creatorId === me.id && (
           <button
             onClick={() => setConfirmDelete(true)}
-            className="press inline-flex items-center gap-1.5 rounded-full border-2 border-coral px-4 py-2 text-sm font-extrabold text-coral"
+            className={`${btnDanger} shrink-0 px-4 py-2`}
           >
             <XIcon className="h-4 w-4" /> Hapus Sesi
           </button>
-        </div>
-      )}
+        )}
+      </div>
 
       <ConfirmDialog
         open={confirmDelete}
@@ -394,14 +421,13 @@ function DetailBody({ id }: { id: string }) {
         }}
       />
 
-      <div className="mt-3 flex gap-1.5 overflow-x-auto">
+      <div className="mt-4 flex gap-1.5 overflow-x-auto pb-1">
         {TABS.map((t) => (
           <button
             key={t}
             onClick={() => go(t)}
-            className={`press whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-bold transition-colors duration-150 ${
-              active === t ? "bg-primary text-white shadow-teal-glow" : "bg-primary-bg text-primary-dark hover:bg-primary-light/60"
-            }`}
+            aria-current={active === t ? "page" : undefined}
+            className={`${pillCls} ${pillState(active === t)}`}
           >
             {TAB_LABEL[t]}
           </button>
@@ -410,33 +436,30 @@ function DetailBody({ id }: { id: string }) {
 
       {active === "overview" && calc && (
         <div className="mt-4 space-y-3">
-          <div className="rounded-lg bg-gradient-to-b from-primary-light to-primary p-5 text-white shadow-teal-glow">
-            <p className="text-xs text-white/80">Tagihanmu</p>
-            <p className="text-4xl font-extrabold">
+          <div className="rounded-lg bg-primary p-5 text-on-solid">
+            <p className="text-xs font-medium">Tagihanmu</p>
+            <p className="mt-1 text-4xl font-semibold tracking-tight">
               {mine ? formatIDR(mine.total) : formatIDR(0)}
             </p>
-            <div className="mt-2 flex gap-3 text-xs text-white/90">
+            <div className="mt-2 flex flex-wrap gap-x-2 gap-y-1 text-xs">
               <span>Total {formatIDR(calc.totalCost)}</span>
-              <span>·</span>
+              <span aria-hidden="true">·</span>
               <span>{session.playerIds.length} pemain</span>
-              <span>·</span>
+              <span aria-hidden="true">·</span>
               <span>{paidCount}/{session.playerIds.length} lunas</span>
             </div>
-            <div className="mt-1 text-xs text-white/90">
+            <div className="mt-1 text-xs">
               Terkumpul {formatIDR(collected)} · Sisa {formatIDR(calc.allocatedTotal - collected)}
             </div>
           </div>
 
-          <button
-            onClick={copyLink}
-            className="press inline-flex items-center justify-center gap-1.5 rounded-full border-2 border-primary px-6 py-3 text-sm font-extrabold text-primary-dark hover:bg-primary-bg w-full"
-          >
+          <button onClick={copyLink} className={`${btnSecondary} w-full`}>
             {copied ? <><CheckIcon className="h-4 w-4" /> Link Copied</> : <><LinkIcon className="h-4 w-4" /> Share Session</>}
           </button>
-          <p className="truncate text-center text-xs text-primary-dark/50">{shareUrl}</p>
+          <p className="truncate text-center text-xs text-fg-subtle">{shareUrl}</p>
 
           {session.playerIds.length === 0 ? (
-            <p className="rounded-lg bg-primary-bg p-4 text-center text-sm text-primary-dark/60">
+            <p className="rounded-lg border border-dashed border-border-strong bg-surface-card p-6 text-center text-sm text-fg-subtle">
               Tambahkan minimal satu pemain untuk menghitung tagihan.
             </p>
           ) : (
@@ -445,20 +468,29 @@ function DetailBody({ id }: { id: string }) {
                 const p = calc.perPlayer[pid];
                 const open = expanded === pid;
                 return (
-                  <div key={pid} className="rounded-lg border-l-4 border-primary-light bg-surface-card p-4 shadow-card">
+                  <div key={pid} className={`${cardCls} p-0`}>
                     <button
                       onClick={() => setExpanded(open ? null : pid)}
-                      className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm transition-colors duration-150 hover:bg-primary-bg/60"
+                      aria-expanded={open}
+                      className="press flex w-full items-center justify-between gap-3 rounded-lg px-4 py-3.5 text-sm hover:bg-neutral-bg"
                     >
-                      <span className="inline-flex items-center gap-1.5 font-extrabold text-primary-dark">
-                        {userName(pid)}
-                        {pid === me.id ? " (kamu)" : ""}{" "}
-                        {session.payments[pid] === "paid" ? <CheckIcon className="h-4 w-4 text-success" /> : <ClockIcon className="h-4 w-4 text-primary-dark/30" />}
+                      <span className="inline-flex min-w-0 items-center gap-1.5">
+                        <span className="truncate font-semibold text-fg">
+                          {userName(pid)}
+                          {pid === me.id ? " (kamu)" : ""}
+                        </span>
+                        {session.payments[pid] === "paid" ? (
+                          <CheckIcon className="h-4 w-4 shrink-0 text-success" />
+                        ) : (
+                          <ClockIcon className="h-4 w-4 shrink-0 text-fg-subtle" />
+                        )}
                       </span>
-                      <span className="font-extrabold text-primary-dark">{formatIDR(p?.total ?? 0)}</span>
+                      <span className="shrink-0 font-semibold text-fg">
+                        {formatIDR(p?.total ?? 0)}
+                      </span>
                     </button>
                     {open && p && (
-                      <div className="space-y-0.5 border-t border-primary-light/40 px-3 py-2 text-xs text-primary-dark/70">
+                      <div className="space-y-0.5 border-t border-border px-4 py-2.5 text-xs text-fg-muted">
                         <div className="flex justify-between"><span>Lapangan</span><span>{formatIDR(p.court)}</span></div>
                         <div className="flex justify-between"><span>Kok</span><span>{formatIDR(p.shuttle)}</span></div>
                         <div className="flex justify-between"><span>Biaya lain</span><span>{formatIDR(p.additional)}</span></div>
@@ -470,8 +502,8 @@ function DetailBody({ id }: { id: string }) {
             </div>
           )}
           {calc.unallocated > 0 && (
-            <p className="flex items-center gap-1.5 rounded-lg bg-accent-light/40 px-3 py-2 text-xs text-accent-dark">
-              <AlertIcon className="h-4 w-4 shrink-0" /> {formatIDR(calc.unallocated)} belum terbagi — ada court/kok tanpa pemain.
+            <p className="flex items-start gap-1.5 rounded-lg bg-accent-light px-3 py-2 text-xs text-accent-dark">
+              <AlertIcon className="h-4 w-4 shrink-0" /> <span>{formatIDR(calc.unallocated)} belum terbagi — ada lapangan/kok tanpa pemain.</span>
             </p>
           )}
         </div>
@@ -479,35 +511,35 @@ function DetailBody({ id }: { id: string }) {
 
       {active === "players" && (
         <div className="mt-4">
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <input
               value={newPlayer}
               onChange={(e) => setNewPlayer(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && addPlayer()}
               placeholder="Nama pemain baru"
-              className={`${inputCls} w-full`}
+              className={`${inputCls} min-w-40 flex-1`}
             />
-            <button onClick={addPlayer} className={addBtn} aria-label="Tambah pemain"><PlusIcon className="h-4 w-4" /></button>
+            <button onClick={addPlayer} className={btnAdd} aria-label="Tambah pemain"><PlusIcon className="h-4 w-4" /></button>
           </div>
           <div className="mt-3 space-y-2">
             {session.playerIds.map((pid) => (
-              <div key={pid} className="animate-row-in flex items-center justify-between rounded-lg border-l-4 border-primary-light bg-surface-card p-4 shadow-card text-sm">
-                <span className="font-medium text-primary-dark">
+              <div key={pid} className={`${cardCls} animate-row-in flex items-center justify-between gap-3 py-3 text-sm`}>
+                <span className="min-w-0 truncate font-medium text-fg">
                   {userName(pid)}{" "}
-                  <span className="text-primary-dark/60">
+                  <span className="text-fg-muted">
                     {formatIDR(calc?.perPlayer[pid]?.total ?? 0)}
                   </span>
                 </span>
                 <button
                   onClick={() => update((d) => removePlayer(d, id, pid))}
-                  className="text-sm text-coral transition-colors duration-150 hover:underline"
+                  className="press shrink-0 text-sm font-medium text-fg-muted hover:text-error"
                 >
                   Hapus
                 </button>
               </div>
             ))}
             {session.playerIds.length === 0 && (
-              <p className="text-sm text-primary-dark/60">Tambahkan minimal satu pemain untuk menghitung tagihan.</p>
+              <p className="text-sm text-fg-subtle">Tambahkan minimal satu pemain untuk menghitung tagihan.</p>
             )}
           </div>
         </div>
@@ -515,9 +547,9 @@ function DetailBody({ id }: { id: string }) {
 
       {active === "courts" && (
         <div className="mt-4">
-          <div className="flex gap-2">
-            <input value={newCourtName} onChange={(e) => setNewCourtName(e.target.value)} placeholder="Nama lapangan" className={`${inputCls} w-full`} />
-            <input value={newCourtPrice} onChange={(e) => setNewCourtPrice(e.target.value)} placeholder="Harga" inputMode="numeric" className={`${inputCls} w-28`} />
+          <div className="flex flex-wrap gap-2">
+            <input value={newCourtName} onChange={(e) => setNewCourtName(e.target.value)} placeholder="Nama lapangan" className={`${inputCls} min-w-40 flex-1`} />
+            <input value={newCourtPrice} onChange={(e) => setNewCourtPrice(e.target.value)} placeholder="Harga" inputMode="numeric" className={`${inputCls} sm:w-32`} />
             <button
               onClick={() => {
                 if (!newCourtPrice.trim() || Number.isNaN(Number(newCourtPrice))) return;
@@ -532,7 +564,7 @@ function DetailBody({ id }: { id: string }) {
                 setNewCourtName("");
                 setNewCourtPrice("");
               }}
-              className={addBtn}
+              className={btnAdd}
               aria-label="Tambah lapangan"
             >
               <PlusIcon className="h-4 w-4" />
@@ -540,16 +572,16 @@ function DetailBody({ id }: { id: string }) {
           </div>
           <div className="mt-3 space-y-2">
             {session.courts.map((c) => (
-              <div key={c.id} className="rounded-lg border-l-4 border-primary-light bg-surface-card p-4 shadow-card">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium text-primary-dark">{c.name}</span>
+              <div key={c.id} className={cardCls}>
+                <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                  <span className="min-w-0 truncate font-medium text-fg">{c.name}</span>
                   {editingPrice === c.id ? (
-                    <span className="flex items-center gap-1.5">
+                    <span className="flex shrink-0 items-center gap-1.5">
                       <input
                         value={priceDraft}
                         onChange={(e) => setPriceDraft(e.target.value)}
                         inputMode="numeric"
-                        className="w-24 rounded-lg border border-primary-light bg-cream px-2 py-1 text-sm text-primary-dark"
+                        className={`${inputCompactCls} w-24`}
                       />
                       <button
                         onClick={() => {
@@ -562,18 +594,18 @@ function DetailBody({ id }: { id: string }) {
                           }
                           setEditingPrice(null);
                         }}
-                        className="text-sm font-extrabold text-primary-dark transition-colors duration-150 hover:text-primary-light"
+                        className={`${btnIcon} h-8 w-8 text-primary`}
                         aria-label="Simpan harga"
                       >
                         <CheckIcon className="h-4 w-4" />
                       </button>
                     </span>
                   ) : (
-                    <span className="flex items-center gap-2 text-primary-dark/70">
-                      {formatIDR(c.price)}
+                    <span className="flex shrink-0 items-center gap-1.5">
+                      <span className="font-medium text-fg">{formatIDR(c.price)}</span>
                       <button
                         onClick={() => { setEditingPrice(c.id); setPriceDraft(String(c.price)); }}
-                        className="text-xs text-primary-dark/60 transition-colors duration-150 hover:text-primary-dark hover:underline"
+                        className="press rounded-lg px-1.5 py-1 text-xs font-medium text-fg-subtle hover:text-fg"
                       >
                         Ubah
                       </button>
@@ -582,7 +614,7 @@ function DetailBody({ id }: { id: string }) {
                           const s = d.sessions.find((x) => x.id === id);
                           if (s) s.courts = s.courts.filter((x) => x.id !== c.id);
                         })}
-                        className="text-coral transition-colors duration-150 hover:underline"
+                        className={`${btnIcon} h-8 w-8 hover:bg-feedback-bg hover:text-error`}
                         aria-label="Hapus lapangan"
                       >
                         <XIcon className="h-4 w-4" />
@@ -599,10 +631,10 @@ function DetailBody({ id }: { id: string }) {
 
       {active === "shuttlecocks" && (
         <div className="mt-4">
-          <div className="flex gap-2">
-            <input value={newKokName} onChange={(e) => setNewKokName(e.target.value)} placeholder="Nama kok" className={`${inputCls} w-full`} />
-            <input value={newKokPackPrice} onChange={(e) => setNewKokPackPrice(e.target.value)} placeholder="Harga 1 slope" inputMode="numeric" className={`${inputCls} w-36`} />
-            <input value={newKokPackSize} onChange={(e) => setNewKokPackSize(e.target.value)} placeholder="Isi" inputMode="numeric" className={`${inputCls} w-20`} aria-label="Isi satu slope" />
+          <div className="flex flex-wrap gap-2">
+            <input value={newKokName} onChange={(e) => setNewKokName(e.target.value)} placeholder="Nama kok" className={`${inputCls} min-w-40 flex-1`} />
+            <input value={newKokPackPrice} onChange={(e) => setNewKokPackPrice(e.target.value)} placeholder="Harga 1 slope" inputMode="numeric" className={`${inputCls} sm:w-36`} />
+            <input value={newKokPackSize} onChange={(e) => setNewKokPackSize(e.target.value)} placeholder="Isi" inputMode="numeric" className={`${inputCls} sm:w-20`} aria-label="Isi satu slope" />
             <button
               onClick={() => {
                 const price = Number(newKokPackPrice);
@@ -623,37 +655,39 @@ function DetailBody({ id }: { id: string }) {
                 setNewKokPackPrice("");
                 setNewKokPackSize("12");
               }}
-              className={addBtn}
+              className={btnAdd}
               aria-label="Tambah kok"
             >
               <PlusIcon className="h-4 w-4" />
             </button>
           </div>
-          <p className="mt-1.5 text-xs text-primary-dark/60">Masukkan harga <b>1 slope/tube utuh</b>. Harga per butir dihitung otomatis.</p>
+          <p className="mt-2 text-xs text-fg-subtle">
+            Masukkan harga <span className="font-medium text-fg-muted">1 slope/tube utuh</span>. Harga per butir dihitung otomatis.
+          </p>
           <div className="mt-3 space-y-2">
             {session.shuttlecocks.map((k) => {
               const cost = shuttleItemCost(k);
               const perHead = k.playerIds.length > 0 ? Math.round(cost / k.playerIds.length) : 0;
               return (
-                <div key={k.id} className="rounded-lg border-l-4 border-primary-light bg-surface-card p-4 shadow-card">
+                <div key={k.id} className={cardCls}>
                   <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
-                    <span className="font-medium text-primary-dark">{k.name}</span>
+                    <span className="min-w-0 truncate font-medium text-fg">{k.name}</span>
                     {editingKok === k.id ? (
-                      <span className="flex items-center gap-1.5">
+                      <span className="flex shrink-0 items-center gap-1.5">
                         <input
                           value={kokPriceDraft}
                           onChange={(e) => setKokPriceDraft(e.target.value)}
                           inputMode="numeric"
                           aria-label="Harga 1 slope"
-                          className="w-24 rounded-lg border border-primary-light bg-cream px-2 py-1 text-sm text-primary-dark"
+                          className={`${inputCompactCls} w-24`}
                         />
-                        <span className="text-xs text-primary-dark/70">slope × isi</span>
+                        <span className="text-xs text-fg-muted">slope × isi</span>
                         <input
                           value={kokSizeDraft}
                           onChange={(e) => setKokSizeDraft(e.target.value)}
                           inputMode="numeric"
                           aria-label="Isi satu slope"
-                          className="w-14 rounded-lg border border-primary-light bg-cream px-2 py-1 text-sm text-primary-dark"
+                          className={`${inputCompactCls} w-14`}
                         />
                         <button
                           onClick={() => {
@@ -670,18 +704,20 @@ function DetailBody({ id }: { id: string }) {
                             }
                             setEditingKok(null);
                           }}
-                          className="text-sm font-extrabold text-primary-dark transition-colors duration-150 hover:text-primary-light"
+                          className={`${btnIcon} h-8 w-8 text-primary`}
                           aria-label="Simpan harga kok"
                         >
                           <CheckIcon className="h-4 w-4" />
                         </button>
                       </span>
                     ) : (
-                      <span className="flex items-center gap-2 text-primary-dark/70">
-                        {formatIDR(k.packPrice)}/slope isi {k.packSize} = {formatIDR(Math.round(shuttleUnitPrice(k)))}/butir
+                      <span className="flex shrink-0 items-center gap-1.5">
+                        <span className="font-medium text-fg">
+                          {formatIDR(k.packPrice)}/slope isi {k.packSize} = {formatIDR(Math.round(shuttleUnitPrice(k)))}/butir
+                        </span>
                         <button
                           onClick={() => { setEditingKok(k.id); setKokPriceDraft(String(k.packPrice)); setKokSizeDraft(String(k.packSize)); }}
-                          className="text-xs text-primary-dark/60 transition-colors duration-150 hover:text-primary-dark hover:underline"
+                          className="press rounded-lg px-1.5 py-1 text-xs font-medium text-fg-subtle hover:text-fg"
                         >
                           Ubah
                         </button>
@@ -690,7 +726,7 @@ function DetailBody({ id }: { id: string }) {
                             const s = d.sessions.find((x) => x.id === id);
                             if (s) s.shuttlecocks = s.shuttlecocks.filter((x) => x.id !== k.id);
                           })}
-                          className="text-coral transition-colors duration-150 hover:underline"
+                          className={`${btnIcon} h-8 w-8 hover:bg-feedback-bg hover:text-error`}
                           aria-label="Hapus kok"
                         >
                           <XIcon className="h-4 w-4" />
@@ -698,27 +734,27 @@ function DetailBody({ id }: { id: string }) {
                       </span>
                     )}
                   </div>
-                  <div className="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-lg bg-primary-bg px-3 py-2 text-sm">
-                    <span className="flex items-center gap-2 text-primary-dark">
-                      <span className="text-xs font-medium text-primary-dark/70">Terpakai</span>
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg bg-primary-bg px-3 py-2 text-sm">
+                    <span className="flex items-center gap-2">
+                      <span className="text-xs font-medium text-fg-muted">Terpakai</span>
                       <button
                         onClick={() => bumpKokUsed(k.id, -1)}
-                        className="press h-6 w-6 rounded-full bg-surface-card font-extrabold text-primary-dark transition-colors duration-150 hover:bg-primary-bg"
+                        className="press h-7 w-7 rounded-full bg-surface-card font-semibold text-fg hover:bg-neutral-bg"
                         aria-label="Kurangi butir terpakai"
                       >
                         −
                       </button>
-                      <span className="min-w-14 text-center font-extrabold">{k.used} butir</span>
+                      <span className="min-w-14 text-center font-semibold text-fg">{k.used} butir</span>
                       <button
                         onClick={() => bumpKokUsed(k.id, 1)}
-                        className="press h-6 w-6 rounded-full bg-surface-card font-extrabold text-primary-dark transition-colors duration-150 hover:bg-primary-bg"
+                        className="press h-7 w-7 rounded-full bg-surface-card font-semibold text-fg hover:bg-neutral-bg"
                         aria-label="Tambah butir terpakai"
                       >
                         +
                       </button>
                     </span>
-                    <span className="text-primary-dark/70">
-                      = <b className="text-primary-dark">{formatIDR(cost)}</b>
+                    <span className="text-fg-muted">
+                      = <span className="font-medium text-fg">{formatIDR(cost)}</span>
                       {k.playerIds.length > 0 && <> · ≈{formatIDR(perHead)}/orang ({k.playerIds.length} pemain)</>}
                     </span>
                   </div>
@@ -732,19 +768,19 @@ function DetailBody({ id }: { id: string }) {
 
       {active === "additional" && calc && (
         <div className="mt-4">
-          <div className="space-y-2 rounded-lg bg-surface-card p-4 shadow-card">
+          <div className={`${cardCls} space-y-2`}>
             <input
               value={newAddName}
               onChange={(e) => setNewAddName(e.target.value)}
               placeholder="Nama biaya (mis. Booking Admin)"
-              className={`${inputCls} w-full`}
+              className={inputCls}
             />
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <select
                 value={newAddCat}
                 onChange={(e) => setNewAddCat(e.target.value)}
                 aria-label="Kategori biaya baru"
-                className={`${inputCls} flex-1`}
+                className={`${inputCls} min-w-40 flex-1`}
               >
                 {ADD_COST_CATEGORIES.map((c) => (
                   <option key={c} value={c}>
@@ -758,31 +794,28 @@ function DetailBody({ id }: { id: string }) {
                 onKeyDown={(e) => e.key === "Enter" && addAdditional()}
                 placeholder="Nominal"
                 inputMode="numeric"
-                className={`${inputCls} w-32`}
+                className={`${inputCls} sm:w-32`}
               />
               <button
                 onClick={addAdditional}
-                className={addBtn}
+                className={btnAdd}
                 aria-label="Tambah biaya lain"
               >
                 <PlusIcon className="h-4 w-4" />
               </button>
             </div>
             {addError && (
-              <p className="rounded-lg bg-coral-light/30 px-2 py-1 text-xs text-error">
+              <p className="rounded-lg bg-feedback-bg px-3 py-2 text-sm text-error">
                 {addError}
               </p>
             )}
-            <p className="text-xs text-primary-dark/60">
+            <p className="text-xs text-fg-subtle">
               Biaya lain dibagi rata ke semua {session.playerIds.length} pemain sesi.
             </p>
           </div>
           <div className="mt-3 space-y-2">
             {session.additionalCosts.map((a) => (
-              <div
-                key={a.id}
-                className="rounded-lg border-l-4 border-primary-light bg-surface-card p-4 shadow-card"
-              >
+              <div key={a.id} className={cardCls}>
                 {editingAdd === a.id ? (
                   <div className="space-y-2">
                     <input
@@ -790,14 +823,14 @@ function DetailBody({ id }: { id: string }) {
                       onChange={(e) => setAddNameDraft(e.target.value)}
                       placeholder="Nama biaya"
                       aria-label="Nama biaya"
-                      className={`${inputCls} w-full`}
+                      className={inputCls}
                     />
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <select
                         value={addCatDraft}
                         onChange={(e) => setAddCatDraft(e.target.value)}
                         aria-label="Kategori biaya"
-                        className={`${inputCls} flex-1`}
+                        className={`${inputCls} min-w-40 flex-1`}
                       >
                         {!(ADD_COST_CATEGORIES as readonly string[]).includes(
                           addCatDraft,
@@ -815,11 +848,11 @@ function DetailBody({ id }: { id: string }) {
                         placeholder="Nominal"
                         inputMode="numeric"
                         aria-label="Nominal biaya"
-                        className={`${inputCls} w-32`}
+                        className={`${inputCls} sm:w-32`}
                       />
                       <button
                         onClick={() => saveAdditional(a.id)}
-                        className="press inline-flex shrink-0 items-center justify-center rounded-full bg-primary-bg px-3 text-sm font-extrabold text-primary-dark transition-colors duration-150 hover:bg-primary-light/25"
+                        className={`${btnIcon} h-[42px] w-[42px] bg-primary-bg text-primary`}
                         aria-label="Simpan biaya"
                       >
                         <CheckIcon className="h-4 w-4" />
@@ -829,7 +862,7 @@ function DetailBody({ id }: { id: string }) {
                           setEditingAdd(null);
                           setAddError("");
                         }}
-                        className="press inline-flex shrink-0 items-center justify-center rounded-full bg-primary-bg px-3 text-primary-dark/70 transition-colors duration-150 hover:bg-primary-light/25"
+                        className={`${btnIcon} h-[42px] w-[42px]`}
                         aria-label="Batal ubah biaya"
                       >
                         <XIcon className="h-4 w-4" />
@@ -838,14 +871,14 @@ function DetailBody({ id }: { id: string }) {
                   </div>
                 ) : (
                   <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
-                    <span className="font-medium text-primary-dark">
+                    <span className="min-w-0 truncate font-medium text-fg">
                       {a.name}{" "}
-                      <span className="font-normal text-primary-dark/70">
+                      <span className="font-normal text-fg-muted">
                         · {a.category}
                       </span>
                     </span>
-                    <span className="flex items-center gap-2 text-primary-dark/70">
-                      {formatIDR(a.amount)}
+                    <span className="flex shrink-0 items-center gap-1.5">
+                      <span className="font-medium text-fg">{formatIDR(a.amount)}</span>
                       <button
                         onClick={() => {
                           setEditingAdd(a.id);
@@ -854,13 +887,13 @@ function DetailBody({ id }: { id: string }) {
                           setAddAmountDraft(String(a.amount));
                           setAddError("");
                         }}
-                        className="text-xs text-primary-dark/60"
+                        className="press rounded-lg px-1.5 py-1 text-xs font-medium text-fg-subtle hover:text-fg"
                       >
                         Ubah
                       </button>
                       <button
                         onClick={() => removeAdditional(a.id)}
-                        className="text-coral"
+                        className={`${btnIcon} h-8 w-8 hover:bg-feedback-bg hover:text-error`}
                         aria-label="Hapus biaya"
                       >
                         <XIcon className="h-4 w-4" />
@@ -871,7 +904,7 @@ function DetailBody({ id }: { id: string }) {
               </div>
             ))}
             {session.additionalCosts.length === 0 && (
-              <p className="text-sm text-primary-dark/60">Belum ada biaya tambahan.</p>
+              <p className="text-sm text-fg-subtle">Belum ada biaya tambahan.</p>
             )}
           </div>
         </div>
@@ -879,16 +912,16 @@ function DetailBody({ id }: { id: string }) {
 
       {active === "payments" && calc && (
         <div className="mt-4">
-          <div className="rounded-lg bg-primary-bg p-4 text-sm text-primary-dark">
-            <div className="flex justify-between"><span>Terkumpul</span><span className="font-extrabold text-primary">{formatIDR(collected)}</span></div>
-            <div className="flex justify-between"><span>Sisa</span><span className="font-extrabold text-primary-dark">{formatIDR(calc.allocatedTotal - collected)}</span></div>
-            <p className="mt-1 text-xs text-primary-dark/70">{paidCount}/{session.playerIds.length} lunas</p>
+          <div className="rounded-lg border border-border bg-primary-bg p-4 text-sm">
+            <div className="flex justify-between"><span className="text-fg-muted">Terkumpul</span><span className="font-semibold text-primary">{formatIDR(collected)}</span></div>
+            <div className="flex justify-between"><span className="text-fg-muted">Sisa</span><span className="font-semibold text-fg">{formatIDR(calc.allocatedTotal - collected)}</span></div>
+            <p className="mt-1 text-xs text-fg-muted">{paidCount}/{session.playerIds.length} lunas</p>
           </div>
-          <div className="mt-3 rounded-lg border-l-4 border-primary-light bg-surface-card p-4 shadow-card">
-            <p className="flex items-center gap-1.5 text-sm font-extrabold text-primary-dark">
+          <div className={`${cardCls} mt-3`}>
+            <p className="flex items-center gap-1.5 text-sm font-semibold text-fg">
               <QrIcon className="h-5 w-5" /> QR Pembayaran
             </p>
-            <p className="mt-1 text-xs text-primary-dark/70">Upload QR (QRIS / e-wallet / m-banking) — temanmu bisa scan dari halaman ini atau halaman join.</p>
+            <p className="mt-1 text-xs text-fg-subtle">Upload QR (QRIS / e-wallet / m-banking) — temanmu bisa scan dari halaman ini atau halaman join.</p>
             <input
               ref={qrInputRef}
               type="file"
@@ -898,22 +931,22 @@ function DetailBody({ id }: { id: string }) {
             />
             {session.paymentQr ? (
               <div className="mt-3">
-                <img src={session.paymentQr} alt="QR pembayaran sesi" className="mx-auto w-full max-w-60 rounded-lg border border-primary-light/40" />
-                <div className="mt-3 flex gap-2">
-                  <button onClick={() => qrInputRef.current?.click()} className="press inline-flex flex-1 items-center justify-center gap-1.5 rounded-full border-2 border-primary px-4 py-2 text-sm font-extrabold text-primary-dark hover:bg-primary-bg">
+                <img src={session.paymentQr} alt="QR pembayaran sesi" className="mx-auto w-full max-w-60 rounded-lg border border-border" />
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button onClick={() => qrInputRef.current?.click()} className={`${btnSecondary} flex-1`}>
                     <UploadIcon className="h-4 w-4" /> Ganti QR
                   </button>
-                  <button onClick={removeQr} className="press inline-flex items-center justify-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm font-extrabold text-white shadow-coral-glow" aria-label="Hapus QR pembayaran">
+                  <button onClick={removeQr} className={btnDanger} aria-label="Hapus QR pembayaran">
                     <XIcon className="h-4 w-4" /> Hapus
                   </button>
                 </div>
               </div>
             ) : (
-              <button onClick={() => qrInputRef.current?.click()} className="press mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-gradient-to-b from-accent-light to-accent px-6 py-3 text-sm font-extrabold text-on-accent shadow-accent-glow">
+              <button onClick={() => qrInputRef.current?.click()} className={`${btnPrimary} mt-3 w-full`}>
                 <UploadIcon className="h-4 w-4" /> Upload QR
               </button>
             )}
-            {qrError && <p className="mt-2 rounded-lg bg-coral-light/30 px-2 py-1 text-xs text-error">{qrError}</p>}
+            {qrError && <p className="mt-2 rounded-lg bg-feedback-bg px-3 py-2 text-xs text-error">{qrError}</p>}
           </div>
           <div className="mt-3 space-y-2">
             {session.playerIds.map((pid) => {
@@ -922,12 +955,13 @@ function DetailBody({ id }: { id: string }) {
                 <button
                   key={pid}
                   onClick={() => update((d) => togglePaid(d, id, pid))}
-                  className="press flex w-full items-center justify-between rounded-lg border-l-4 border-primary-light bg-surface-card p-4 shadow-card text-sm"
+                  aria-pressed={paid}
+                  className={`${cardCls} press flex w-full items-center justify-between gap-3 py-3 text-left text-sm`}
                 >
-                  <span className="font-medium text-primary-dark">{userName(pid)}</span>
-                  <span className="flex items-center gap-2">
-                    <span className="text-primary-dark/70">{formatIDR(calc.perPlayer[pid]?.total ?? 0)}</span>
-                    <span className={paid ? "text-success" : "text-primary-dark/30"}>
+                  <span className="min-w-0 truncate font-medium text-fg">{userName(pid)}</span>
+                  <span className="flex shrink-0 items-center gap-2">
+                    <span className="text-fg-muted">{formatIDR(calc.perPlayer[pid]?.total ?? 0)}</span>
+                    <span className={paid ? "text-success" : "text-fg-subtle"}>
                       {paid ? <CheckIcon className="h-5 w-5" /> : <ClockIcon className="h-5 w-5" />}
                     </span>
                   </span>
@@ -950,7 +984,7 @@ export default function SessionDetailPage({
   useEffect(() => {
     void params.then((p) => setId(p.id));
   }, [params]);
-  if (!id) return <main className="py-10 text-sm text-primary-dark/70">Memuat…</main>;
+  if (!id) return <main className="py-10 text-sm text-fg-muted">Memuat…</main>;
   return (
     <Suspense>
       <DetailBody id={id} />

@@ -96,24 +96,24 @@ export function ConfirmDialog({
         aria-labelledby={titleId}
         aria-describedby={descId}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md rounded-2xl bg-surface-card p-5 shadow-card"
+        className="w-full max-w-md rounded-xl border border-border bg-surface-card p-5 shadow-raised"
       >
         <div className="flex items-start gap-3">
-          <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-coral-light/25 text-coral">
+          <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-feedback-bg text-error">
             <AlertIcon className="h-5 w-5" />
           </span>
           <div className="min-w-0">
-            <h2 id={titleId} className="text-base font-extrabold text-primary-dark">
+            <h2 id={titleId} className="text-base font-semibold text-fg">
               {title}
             </h2>
-            <p id={descId} className="mt-1 text-sm text-primary-dark/70">
+            <p id={descId} className="mt-1 text-sm text-fg-muted">
               {description}
             </p>
           </div>
         </div>
 
         {error && (
-          <p className="mt-3 rounded-lg bg-coral-light/30 px-3 py-2 text-sm text-error">{error}</p>
+          <p className="mt-3 rounded-lg bg-feedback-bg px-3 py-2 text-sm text-error">{error}</p>
         )}
 
         <div className="mt-5 flex gap-2">
@@ -122,7 +122,7 @@ export function ConfirmDialog({
             type="button"
             onClick={onCancel}
             disabled={busy}
-            className="press flex-1 rounded-full border-2 border-primary px-6 py-3 text-sm font-extrabold text-primary-dark hover:bg-primary-bg disabled:opacity-60"
+            className="press flex-1 rounded-full border border-border-strong bg-surface-card px-6 py-3 text-sm font-semibold text-fg hover:bg-neutral-bg disabled:opacity-60"
           >
             Batal
           </button>
@@ -130,7 +130,7 @@ export function ConfirmDialog({
             type="button"
             onClick={onConfirm}
             disabled={busy}
-            className="press flex-1 rounded-full bg-gradient-to-b from-coral-light to-coral px-6 py-3 text-sm font-extrabold text-white shadow-coral-glow disabled:opacity-60"
+            className="press flex-1 rounded-full bg-coral-dark px-6 py-3 text-sm font-semibold text-on-solid hover:bg-coral disabled:opacity-60"
           >
             {busy ? busyLabel : confirmLabel}
           </button>

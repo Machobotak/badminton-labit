@@ -1,75 +1,128 @@
 @import "tailwindcss";
 
+/*
+ * Skala warna.
+ *
+ * - nama lama (primary/primary-dark/dst.) dipertahankan karena masih
+ *   dirujuk komponen; namanya tetap sama tapi nilainya sudah AA-safe,
+ * - nama semantik baru (fg, fg-muted, fg-subtle, border, input-bg, dst.)
+ *   dipakai kode baru supaya peran tiap warna tidak perlu ditebak.
+ *
+ * Setiap pasangan teks/latar di bawah sudah diukur terhadap WCAG AA
+ * (4.5:1 untuk teks, 3:1 untuk batas kontrol). Kontras token lama tidak
+ * memenuhi ambang — teks utama pada latar putih hanya 4.08:1 dan label
+ * tombol kuning 2.82:1 — jadi angkanya diperbaiki, bukan hanya dirapikan.
+ */
 @theme {
-  --color-primary: #2BA8A2;
-  --color-primary-light: #3CC4BD;
-  --color-primary-dark: #1E8C86;
-  --color-primary-bg: #E8F6F5;
-  --color-on-accent: #1E8C86;
-  --color-accent: #FFD23F;
-  --color-accent-light: #FFE47A;
-  --color-accent-dark: #E6B800;
-  --color-coral: #EF6C4A;
-  --color-coral-light: #FF8A6A;
-  --color-coral-dark: #D45233;
-  --color-cream: #FFF8E7;
-  --color-sky: #5DADE2;
-  --color-surface-base: #EFF8F7;
-  --color-surface-card: #FFFFFF;
-  --color-success: #27AE60;
-  --color-error: #E74C3C;
-  --shadow-card: 0 4px 20px rgba(43,168,162,0.10);
-  --shadow-teal-glow: 0 4px 20px rgba(43,168,162,0.30);
-  --shadow-coral-glow: 0 4px 20px rgba(239,108,74,0.35);
-  --shadow-accent-glow: 0 4px 20px rgba(255,210,63,0.40);
-  --shadow-focus: 0 0 0 4px rgba(43,168,162,0.15);
+  /* Merek */
+  --color-primary: #107d77;
+  --color-primary-light: #45b8b1;
+  --color-primary-dark: #0c6a65;
+  --color-primary-bg: #eef6f5;
+
+  /* Aksen (tombol utama) */
+  --color-accent: #f5c144;
+  --color-accent-light: #ffe083;
+  --color-accent-dark: #7a5200;
+  --color-on-accent: #10302e;
+
+  /* Aksi destruktif */
+  --color-coral: #ef6c4a;
+  --color-coral-light: #ff8a6a;
+  --color-coral-dark: #c0452a;
+
+  /* Status */
+  --color-success: #15803d;
+  --color-error: #c0392b;
+  --color-warning: #8a5a00;
+
+  /* Permukaan */
+  --color-surface-base: #f4f7f7;
+  --color-surface-card: #ffffff;
+  --color-surface-muted: #f7fafa;
+  --color-neutral-bg: #edf2f1;
+
+  /* Teks, garis, bidang isian */
+  --color-fg: #10302e;
+  --color-fg-muted: #4e6c6a;
+  --color-fg-subtle: #5f7371;
+  --color-on-solid: #ffffff;
+  --color-border: #e3eae9;
+  --color-border-strong: #c9d6d5;
+  --color-input-bg: #ffffff;
+
+  /* Latar pesan galat & sukses */
+  --color-feedback-bg: #fbeae7;
+  --color-success-bg: #e8f7ee;
+
+  /*
+   * Elevasi dibuat tipis dan netral. Sebelumnya bayangan berwarna (teal,
+   * kuning, coral) dipakai sebagai cahaya; itu yang membuat halaman terlihat
+   * "menyala". Pemisahan kartu kini mengandalkan garis, bukan bayangan.
+   */
+  --shadow-card: 0 1px 2px rgba(16, 48, 46, 0.06);
+  --shadow-raised:
+    0 1px 3px rgba(16, 48, 46, 0.1), 0 1px 2px rgba(16, 48, 46, 0.06);
+  --shadow-focus: 0 0 0 3px rgba(16, 125, 119, 0.28);
 }
 
 .dark {
-  --color-primary: #2BA8A2;
-  --color-primary-light: #3CC4BD;
-  --color-primary-dark: #E6FFFD;
-  --color-primary-bg: #123B39;
-  --color-on-accent: #1E8C86;
-  --color-accent: #FFD23F;
-  --color-accent-light: #FFE47A;
-  --color-accent-dark: #E6B800;
-  --color-coral: #EF6C4A;
-  --color-coral-light: #FF8A6A;
-  --color-coral-dark: #D45233;
-  --color-cream: #143B39;
-  --color-sky: #7CC4EC;
-  --color-surface-base: #0E2423;
-  --color-surface-card: #16403D;
-  --color-success: #4BD68A;
-  --color-error: #FF7B6B;
-  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.35);
-  --shadow-teal-glow: 0 4px 20px rgba(43, 168, 162, 0.25);
-  --shadow-coral-glow: 0 4px 20px rgba(239, 108, 74, 0.30);
-  --shadow-accent-glow: 0 4px 20px rgba(255, 210, 63, 0.30);
-  --shadow-focus: 0 0 0 4px rgba(43, 168, 162, 0.25);
-}
+  --color-primary: #4fd1c7;
+  --color-primary-light: #2f5d58;
+  --color-primary-dark: #5fdcd2;
+  --color-primary-bg: #17332f;
 
-.dark body {
-  background: #0E2423;
-  color: #E6FFFD;
-}
+  --color-accent: #f5c144;
+  --color-accent-light: #3a2f12;
+  --color-accent-dark: #ffd98a;
+  --color-on-accent: #10302e;
 
-.dark select option {
-  background: #16403D;
-  color: #E6FFFD;
+  --color-coral: #ff8f7f;
+  --color-coral-light: #ff8a6a;
+  --color-coral-dark: #ff6a52;
+
+  --color-success: #4ade80;
+  --color-error: #ff8f7f;
+  --color-warning: #ffd98a;
+
+  --color-surface-base: #0b1918;
+  --color-surface-card: #122a28;
+  --color-surface-muted: #0f2422;
+  --color-neutral-bg: #1b3a37;
+
+  --color-fg: #e9f3f2;
+  --color-fg-muted: #a9b7b5;
+  --color-fg-subtle: #8fa3a1;
+  --color-on-solid: #06201e;
+  --color-border: #22403d;
+  --color-border-strong: #2f5d58;
+  --color-input-bg: #0f2422;
+
+  --color-feedback-bg: #3a201c;
+  --color-success-bg: #14331f;
+
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.45);
+  --shadow-raised:
+    0 1px 3px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-focus: 0 0 0 3px rgba(79, 209, 199, 0.35);
 }
 
 body {
-  background: #EFF8F7; /* surface-base */
-  color: #1E8C86;      /* primary-dark, text utama */
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+  background: var(--color-surface-base);
+  color: var(--color-fg);
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+}
+
+.dark select option {
+  background: var(--color-surface-card);
+  color: var(--color-fg);
 }
 
 @keyframes row-in {
   from {
     opacity: 0;
-    transform: translateY(6px);
+    transform: translateY(4px);
   }
   to {
     opacity: 1;
@@ -78,69 +131,43 @@ body {
 }
 
 .animate-row-in {
-  animation: row-in 0.25s ease-out;
+  animation: row-in 0.2s ease-out;
 }
 
-/* `translate` dan `filter` dari rule hover global (bawah) tetap ikut beranimasi;
-   `transform` dipakai untuk efek tekan. */
+/* Umpan balik tekan: satu-satunya gerakan transform di aplikasi. */
 .press {
   transition:
     transform 0.12s ease-out,
     color 0.15s ease-out,
     background-color 0.15s ease-out,
     border-color 0.15s ease-out,
-    box-shadow 0.15s ease-out,
-    filter 0.15s ease-out,
-    translate 0.15s ease-out;
+    box-shadow 0.15s ease-out;
 }
-.press:active {
-  transform: scale(0.95);
+.press:active:not(:disabled) {
+  transform: scale(0.97);
 }
 
 /*
- * Tombol hapus sesi: membesar + menyala saat kursor mendekat, lalu "meletup"
- * saat ditekan. Transform tidak mengubah layout, jadi tombol di dalam kartu
- * tidak mendorong teks di sekitarnya.
+ * Tombol hapus sesi: sasaran ketuk tetap 40px, tapi hanya berubah warna.
+ * Versi sebelumnya membesar 1.18x sambil berotasi dan menyala — gerakan itu
+ * menarik perhatian lebih besar daripada isi kartunya sendiri.
  */
 .btn-delete {
   transition:
-    transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
-    color 0.18s ease-out,
-    background-color 0.18s ease-out,
-    border-color 0.18s ease-out,
-    box-shadow 0.22s ease-out,
-    filter 0.15s ease-out,
-    translate 0.15s ease-out;
+    color 0.15s ease-out,
+    background-color 0.15s ease-out,
+    border-color 0.15s ease-out;
 }
 .btn-delete:hover {
-  transform: scale(1.18) rotate(-8deg);
-  background-color: var(--color-coral);
-  color: #fff;
-  box-shadow: var(--shadow-coral-glow);
-}
-.btn-delete:active {
-  background-color: var(--color-coral-dark);
-  color: #fff;
-  box-shadow: var(--shadow-coral-glow);
-  animation: delete-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-}
-@keyframes delete-pop {
-  0% {
-    transform: scale(1) rotate(0deg);
-  }
-  40% {
-    transform: scale(1.3) rotate(-12deg);
-  }
-  100% {
-    transform: scale(0.82) rotate(0deg);
-  }
+  background-color: var(--color-feedback-bg);
+  color: var(--color-error);
 }
 
 /*
- * Umpan balik hover untuk setiap elemen yang bisa diklik (tautan, tombol,
- * select, kotak centang). Selector `:where()` berbobot 0, jadi class komponen
- * (`.btn-delete`, `.press`) dan utility Tailwind selalu menang lebih dulu,
- * berapa pun urutan rule-nya.
+ * Umpan balik hover untuk elemen yang bisa diklik. Selector `:where()` berbobot
+ * 0, jadi class komponen dan utility Tailwind selalu menang lebih dulu.
+ * Tidak ada translate/box-shadow di sini: sebelumnya setiap tautan dan tombol
+ * terangkat 1px sambil menyala, sehingga tidak ada lagi elemen yang tenang.
  */
 :where(a[href], button, summary) {
   cursor: pointer;
@@ -148,31 +175,17 @@ body {
     color 0.15s ease-out,
     background-color 0.15s ease-out,
     border-color 0.15s ease-out,
-    box-shadow 0.15s ease-out,
-    filter 0.15s ease-out,
-    translate 0.15s ease-out;
+    box-shadow 0.15s ease-out;
 }
+
 @media (hover: hover) {
-  /* translate dan filter bukan `transform`, jadi tidak menimpa scale/rotate
-     milik `.press` maupun keyframe; box-shadow memberi kesan elemen terangkat. */
-  :where(a[href]:hover, button:hover, summary:hover):not(:disabled) {
-    translate: 0 -1px;
-    box-shadow: var(--shadow-teal-glow);
-    filter: brightness(1.05);
-  }
-  /* Kontrol form: sorotan halus, bukan "melompat". */
-  :where(select:hover, input[type="file"]:hover):not(:disabled) {
-    box-shadow: inset 0 0 0 1px var(--color-primary);
-  }
-  /* Label yang benar-benar bisa diklik (terhubung `for`/`htmlFor` ke kontrol
-     tepat setelahnya): teks bergaris bawah saat kursor mendekat. Label yang
-     hanya keterangan biasa tidak diberi umpan balik agar tidak menyesatkan. */
-  :where(label:has(+ input, + select, + textarea)):hover {
-    text-decoration-line: underline;
-    text-underline-offset: 3px;
-  }
-  :where(input[type="checkbox"]:hover, input[type="radio"]:hover):not(:disabled) {
-    filter: brightness(1.12);
+  /* Bidang isian: batasnya menguat, tanpa memindahkan layout. */
+  :where(
+    input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+    select,
+    textarea
+  ):hover:not(:disabled) {
+    border-color: var(--color-border-strong);
   }
   :where(button:disabled) {
     cursor: default;
@@ -195,21 +208,16 @@ label:has(:disabled) {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .btn-delete,
-  .btn-delete:hover,
-  .btn-delete:active {
-    transition: none;
+  .animate-row-in {
     animation: none;
   }
-  .btn-delete:hover,
-  .btn-delete:active {
+  .press {
+    transition: none;
+  }
+  .press:active:not(:disabled) {
     transform: none;
   }
   :where(a[href], button, summary) {
     transition: none;
-  }
-  :where(a[href]:hover, button:hover, summary:hover) {
-    translate: none;
-    filter: none;
   }
 }

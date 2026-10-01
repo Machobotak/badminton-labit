@@ -12,23 +12,27 @@ export default function TopNav() {
   const item = (href: string, label: string, active: boolean) => (
     <Link
       href={href}
-      className={`rounded-full px-4 py-2 text-sm font-extrabold ${
+      aria-current={active ? "page" : undefined}
+      className={`press rounded-full px-3.5 py-2 text-sm font-semibold ${
         active
-          ? "bg-primary text-white shadow-teal-glow"
-          : "text-primary-dark hover:bg-primary-bg"
+          ? "bg-primary text-on-solid"
+          : "text-fg-muted hover:bg-neutral-bg hover:text-fg"
       }`}
     >
       {label}
     </Link>
   );
   return (
-    <header className="hidden md:block sticky top-0 z-20 border-b border-primary-light/40 bg-surface-card">
-      <div className="mx-auto flex max-w-5xl items-center justify-between px-8 py-4">
-        <Link href="/dashboard" className="flex items-center gap-2 text-xl font-extrabold text-primary-dark">
-          <ShuttlecockIcon className="h-6 w-6" />
+    <header className="sticky top-0 z-20 hidden border-b border-border bg-surface-card/95 backdrop-blur md:block">
+      <div className="mx-auto flex max-w-5xl items-center justify-between px-8 py-3">
+        <Link
+          href="/dashboard"
+          className="flex items-center gap-2 text-base font-semibold text-fg"
+        >
+          <ShuttlecockIcon className="h-5 w-5 text-primary" />
           Badminton Split
         </Link>
-        <nav className="flex items-center gap-2">
+        <nav className="flex items-center gap-1">
           {item("/dashboard", "Dashboard", path === "/dashboard")}
           {item("/sessions/new", "Buat Sesi", path === "/sessions/new")}
           {item("/profile", "Profil", path === "/profile")}

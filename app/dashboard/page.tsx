@@ -10,6 +10,14 @@ import { currentUser } from "../../lib/mutations";
 import { useApp } from "../../lib/useApp";
 import { PlusIcon, XIcon } from "../../components/icons";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
+import {
+  badgeCls,
+  btnIcon,
+  btnPrimary,
+  cardCls,
+  pillCls,
+  pillState,
+} from "../../components/ui";
 
 const FILTERS: { id: SessionStatus | "all"; label: string }[] = [
   { id: "all", label: "Semua" },
@@ -49,51 +57,51 @@ export default function DashboardPage() {
 
   if (error) {
     return (
-      <main className="py-10 text-sm text-coral">
-        Gagal memuat data: {error}
+      <main className="py-10">
+        <p className="rounded-lg bg-feedback-bg px-3 py-2 text-sm text-error">
+          Gagal memuat data: {error}
+        </p>
       </main>
     );
   }
 
   if (loading || !data) {
-    return <main className="py-10 text-sm text-primary-dark/70">Memuat…</main>;
+    return <main className="py-10 text-sm text-fg-muted">Memuat…</main>;
   }
 
   if (!me) {
-    return <main className="py-10 text-sm text-primary-dark/70">Mengalihkan ke halaman masuk…</main>;
+    return (
+      <main className="py-10 text-sm text-fg-muted">
+        Mengalihkan ke halaman masuk…
+      </main>
+    );
   }
 
   return (
     <main className="py-6 md:py-10">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm text-primary-dark/70">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-sm text-fg-muted">
             {greeting()},{" "}
-            <span className="font-semibold text-primary-dark">
-              {me?.name ?? "…"}
-            </span>
+            <span className="font-semibold text-fg">{me.name}</span>
           </p>
-          <h1 className="text-xl font-extrabold text-primary-dark">Sesi Badmintonmu</h1>
+          <h1 className="text-xl font-semibold tracking-tight text-fg">
+            Sesi Badmintonmu
+          </h1>
         </div>
-        <Link
-          href="/sessions/new"
-          className="press inline-flex items-center justify-center gap-1.5 rounded-full bg-gradient-to-b from-accent-light to-accent px-6 py-3 text-sm font-extrabold text-on-accent shadow-accent-glow"
-        >
+        <Link href="/sessions/new" className={`${btnPrimary} shrink-0`}>
           <PlusIcon className="h-4 w-4" />
           Buat Sesi
         </Link>
       </div>
 
-      <div className="mt-4 flex gap-2 overflow-x-auto">
+      <div className="mt-5 flex gap-2 overflow-x-auto pb-1">
         {FILTERS.map((f) => (
           <button
             key={f.id}
             onClick={() => setFilter(f.id)}
-            className={`press whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-bold transition-colors duration-150 ${
-              filter === f.id
-                ? "bg-primary text-white shadow-teal-glow"
-                : "bg-primary-bg text-primary-dark hover:bg-primary-light/60"
-            }`}
+            aria-pressed={filter === f.id}
+            className={`${pillCls} ${pillState(filter === f.id)}`}
           >
             {f.label}
           </button>
@@ -102,7 +110,7 @@ export default function DashboardPage() {
 
       <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {sessions.length === 0 && (
-          <div className="rounded-lg bg-primary-bg p-6 text-center text-sm text-primary-dark/60">
+          <div className="rounded-lg border border-dashed border-border-strong bg-surface-card p-6 text-center text-sm text-fg-subtle">
             Belum ada sesi di filter ini. Yuk buat sesi pertamamu!
           </div>
         )}
@@ -110,41 +118,38 @@ export default function DashboardPage() {
           const calc = calculateSession(s);
           const paid = s.playerIds.filter((p) => s.payments[p] === "paid").length;
           const mine = me ? (calc.perPlayer[me.id]?.total ?? 0) : 0;
+          const statusClass =
+            s.status === "completed"
+              ? "bg-neutral-bg text-primary-dark"
+              : s.status === "active"
+                ? "bg-primary-bg text-primary-dark"
+                : "bg-accent-light text-accent-dark";
           return (
-            <Link
-              key={s.id}
-              href={`/sessions/${s.id}`}
-              className="press relative block rounded-lg border-l-4 border-primary-light bg-surface-card p-4 shadow-card"
-            >
+            <Link key={s.id} href={`/sessions/${s.id}`} className={`press ${cardCls}`}>
               <div className="flex items-start justify-between gap-2">
-                <div>
-                  <p className="font-extrabold text-primary-dark">{s.name}</p>
-                  <p className="mt-0.5 text-xs text-primary-dark/70">
+                <div className="min-w-0">
+                  <p className="truncate font-semibold text-fg">{s.name}</p>
+                  <p className="mt-1 text-xs text-fg-muted">
                     {formatDateID(s.date)} · {timeRange(s.startTime, s.endTime)}
                   </p>
-                  <p className="mt-0.5 text-xs text-primary-dark/70">
+                  <p className="mt-0.5 text-xs text-fg-muted">
                     {s.playerIds.length} pemain · {paid}/{s.playerIds.length} lunas
                   </p>
                 </div>
-                <span
-                  className={`rounded-full px-2.5 py-1 text-xs font-bold capitalize ${
-                    s.status === "completed"
-                      ? "bg-primary-bg text-primary-dark"
-                      : s.status === "active"
-                        ? "bg-primary-light text-primary-dark"
-                        : "bg-accent-light text-accent-dark"
-                  }`}
-                >
-                  {s.status}
-                </span>
+                <span className={`${badgeCls} ${statusClass}`}>{s.status}</span>
               </div>
-              <div className="mt-3 flex items-center justify-between gap-2 border-t border-primary-light/40 pt-3 text-sm">
-                <span className="text-primary-dark/70">
-                  Total <span className="font-semibold text-primary-dark">{formatIDR(calc.totalCost)}</span>
+              <div className="mt-3 flex items-center justify-between gap-2 border-t border-border pt-3 text-sm">
+                <span className="text-fg-muted">
+                  Total{" "}
+                  <span className="font-semibold text-fg">
+                    {formatIDR(calc.totalCost)}
+                  </span>
                 </span>
-                <span className="flex items-center gap-2 text-primary-dark/70">
-                  Tagihanmu{" "}
-                  <span className="font-extrabold text-primary">{formatIDR(mine)}</span>
+                <span className="flex items-center gap-1.5 text-fg-muted">
+                  <span className="font-medium">Tagihanmu</span>
+                  <span className="font-semibold text-primary">
+                    {formatIDR(mine)}
+                  </span>
                   {s.creatorId === me.id && (
                     <button
                       type="button"
@@ -156,9 +161,9 @@ export default function DashboardPage() {
                       }}
                       aria-label={`Hapus sesi ${s.name}`}
                       title="Hapus sesi"
-                      className="btn-delete -mr-1.5 ml-1 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-coral"
+                      className={`btn-delete ${btnIcon} -mr-1.5`}
                     >
-                      <XIcon className="h-5 w-5" />
+                      <XIcon className="h-4 w-4" />
                     </button>
                   )}
                 </span>
