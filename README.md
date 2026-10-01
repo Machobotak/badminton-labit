@@ -161,6 +161,20 @@ langsung ke baris sendiri. Nama pemain lain selalu dirakit server-side oleh
 `sessionPayload` memakai service_role, jadi tabelnya tidak perlu bisa diintip
 pemegang anon key.
 
+### Konfirmasi hapus sesi
+
+Hapus sesi memakai `components/ConfirmDialog.tsx` — dialog milik aplikasi
+(`role="dialog"` + `aria-modal`), bukan `window.confirm` bawaan browser yang
+tampilannya di luar kendali tema. Dialog menutup lewat tombol Batal, Esc, atau
+klik latar; fokus awal pindah ke Batal dan Tab berputar di dalam dialog.
+
+`removeSession` di `lib/useApp.ts` menolak (reject) bila DELETE gagal, supaya
+pemanggil bisa membedakan sukses dari gagal. Kegagalan ditampilkan **di dalam
+dialog** (dialog tetap terbuka agar bisa dicoba lagi), bukan hanya di banner
+halaman. Karena mutasi lain di antrean yang sama juga melaporkan error lewat
+`error` global, halaman bisa sekejap menampilkan "Gagal memuat data" saat
+auto-reload sebelum kembali normal — perilaku lama yang tidak berubah.
+
 ## API
 
 | Method | Path | Keterangan |

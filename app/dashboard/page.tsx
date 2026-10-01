@@ -9,6 +9,7 @@ import type { SessionStatus } from "../../lib/types";
 import { currentUser } from "../../lib/mutations";
 import { useApp } from "../../lib/useApp";
 import { PlusIcon, XIcon } from "../../components/icons";
+import { ConfirmDialog } from "../../components/ConfirmDialog";
 
 const FILTERS: { id: SessionStatus | "all"; label: string }[] = [
   { id: "all", label: "Semua" },
@@ -21,21 +22,21 @@ export default function DashboardPage() {
   const router = useRouter();
   const { data, loading, error, removeSession } = useApp();
   const [filter, setFilter] = useState<SessionStatus | "all">("all");
+  const [pendingDelete, setPendingDelete] = useState<{ id: string; name: string } | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
   const me = data ? currentUser(data) : null;
 
-  const hapusSesi = async (id: string, name: string) => {
-    if (
-      !window.confirm(
-        `Hapus sesi "${name}"? Semua lapangan, kok, dan biaya di dalamnya ikut terhapus. Tindakan ini tidak bisa dibatalkan.`,
-      )
-    )
-      return;
+  const hapusSesi = async (id: string) => {
+    setDeleting(true);
     setDeleteError("");
     try {
       await removeSession(id);
+      setPendingDelete(null);
     } catch (e) {
       setDeleteError(e instanceof Error ? e.message : "Gagal menghapus sesi");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -99,12 +100,6 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      {deleteError && (
-        <p className="mt-4 rounded-lg bg-coral-light/30 px-3 py-2 text-sm text-error">
-          {deleteError}
-        </p>
-      )}
-
       <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {sessions.length === 0 && (
           <div className="rounded-lg bg-primary-bg p-6 text-center text-sm text-primary-dark/60">
@@ -156,7 +151,8 @@ export default function DashboardPage() {
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        void hapusSesi(s.id, s.name);
+                        setDeleteError("");
+                        setPendingDelete({ id: s.id, name: s.name });
                       }}
                       aria-label={`Hapus sesi ${s.name}`}
                       title="Hapus sesi"
@@ -171,6 +167,21 @@ export default function DashboardPage() {
           );
         })}
       </div>
+
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        title={`Hapus sesi "${pendingDelete?.name ?? ""}"?`}
+        description="Semua lapangan, kok, dan biaya di dalamnya ikut terhapus. Tindakan ini tidak bisa dibatalkan."
+        busy={deleting}
+        error={deleteError}
+        onConfirm={() => {
+          if (pendingDelete) void hapusSesi(pendingDelete.id);
+        }}
+        onCancel={() => {
+          setPendingDelete(null);
+          setDeleteError("");
+        }}
+      />
     </main>
   );
 }

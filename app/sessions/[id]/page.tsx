@@ -10,6 +10,7 @@ import { currentUser, removePlayer, togglePaid } from "../../../lib/mutations";
 import { makeId, shuttleUsedForPlayers } from "../../../lib/db";
 import { useApp } from "../../../lib/useApp";
 import { AlertIcon, ArrowLeftIcon, CheckIcon, ClockIcon, LinkIcon, PlusIcon, QrIcon, UploadIcon, XIcon } from "../../../components/icons";
+import { ConfirmDialog } from "../../../components/ConfirmDialog";
 
 const TABS = [
   "overview",
@@ -62,6 +63,8 @@ function DetailBody({ id }: { id: string }) {
   const [addCatDraft, setAddCatDraft] = useState<string>(ADD_COST_CATEGORIES[0]);
   const [addAmountDraft, setAddAmountDraft] = useState("");
   const [addError, setAddError] = useState("");
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
   const [qrError, setQrError] = useState("");
   const qrInputRef = useRef<HTMLInputElement>(null);
@@ -272,18 +275,14 @@ function DetailBody({ id }: { id: string }) {
   };
 
   const hapusSesi = async () => {
-    if (
-      !window.confirm(
-        `Hapus sesi "${session.name}"? Semua lapangan, kok, dan biaya di dalamnya ikut terhapus. Tindakan ini tidak bisa dibatalkan.`,
-      )
-    )
-      return;
+    setDeleting(true);
     setDeleteError("");
     try {
       await removeSession(id);
       router.replace("/dashboard");
     } catch (e) {
       setDeleteError(e instanceof Error ? e.message : "Gagal menghapus sesi");
+      setDeleting(false);
     }
   };
 
@@ -374,18 +373,26 @@ function DetailBody({ id }: { id: string }) {
       {session.creatorId === me.id && (
         <div className="mt-3">
           <button
-            onClick={() => void hapusSesi()}
-            className="inline-flex items-center gap-1.5 rounded-full border-2 border-coral px-4 py-2 text-sm font-extrabold text-coral"
+            onClick={() => setConfirmDelete(true)}
+            className="press inline-flex items-center gap-1.5 rounded-full border-2 border-coral px-4 py-2 text-sm font-extrabold text-coral"
           >
             <XIcon className="h-4 w-4" /> Hapus Sesi
           </button>
-          {deleteError && (
-            <p className="mt-2 rounded-lg bg-coral-light/30 px-3 py-2 text-sm text-error">
-              {deleteError}
-            </p>
-          )}
         </div>
       )}
+
+      <ConfirmDialog
+        open={confirmDelete}
+        title={`Hapus sesi "${session.name}"?`}
+        description="Semua lapangan, kok, dan biaya di dalamnya ikut terhapus. Tindakan ini tidak bisa dibatalkan."
+        busy={deleting}
+        error={deleteError}
+        onConfirm={() => void hapusSesi()}
+        onCancel={() => {
+          setConfirmDelete(false);
+          setDeleteError("");
+        }}
+      />
 
       <div className="mt-3 flex gap-1.5 overflow-x-auto">
         {TABS.map((t) => (

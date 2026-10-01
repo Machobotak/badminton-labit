@@ -27,6 +27,9 @@ export function useApp(): UseApp {
   // Turunan, bukan state: belum ada data DAN belum ada error = masih memuat.
   const loading = data === null && error === null;
   const queue = useRef<Promise<unknown>>(Promise.resolve());
+  // Error terakhir dari `enqueue`, supaya pemanggil mutasi (mis. tombol hapus)
+  // tahu aksinya gagal alih-alih menganggapnya sukses.
+  const lastMutationError = useRef<Error | null>(null);
 
   // Cermin `data` yang selalu terbaru, dibaca oleh `update()` agar diff dihitung
   // dari snapshot nyata (bukan di dalam updater setState yang bisa dipanggil 2x).
@@ -72,10 +75,13 @@ export function useApp(): UseApp {
   const enqueue = useCallback(
     (task: () => Promise<unknown>): Promise<void> => {
       const next = queue.current.then(async () => {
+        lastMutationError.current = null;
         try {
           await task();
         } catch (e: unknown) {
-          setError(e instanceof Error ? e.message : "Gagal menyimpan perubahan");
+          const err = e instanceof Error ? e : new Error("Gagal menyimpan perubahan");
+          lastMutationError.current = err;
+          setError(err.message);
           void reload();
         }
       });
@@ -145,7 +151,7 @@ export function useApp(): UseApp {
 
   const removeSession = useCallback(
     (sessionId: string) =>
-      new Promise<void>((resolve) => {
+      new Promise<void>((resolve, reject) => {
         enqueue(async () => {
           await api.deleteSession(sessionId);
           const prev = dataRef.current;
@@ -157,7 +163,11 @@ export function useApp(): UseApp {
             dataRef.current = next;
             setData(next);
           }
-        }).finally(resolve);
+        }).then(() =>
+          lastMutationError.current
+            ? reject(lastMutationError.current)
+            : resolve(),
+        );
       }),
     [enqueue],
   );
