@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ShuttlecockIcon } from "./icons";
+import { CourtIcon } from "./icons";
 
 const HIDDEN = ["/", "/login", "/register"];
 
@@ -15,21 +15,21 @@ export default function TopNav() {
       aria-current={active ? "page" : undefined}
       className={`press rounded-full px-3.5 py-2 text-sm font-semibold ${
         active
-          ? "bg-primary text-on-solid"
-          : "text-fg-muted hover:bg-neutral-bg hover:text-fg"
+          ? "bg-accent text-on-accent"
+          : "text-white/70 hover:bg-white/10 hover:text-white"
       }`}
     >
       {label}
     </Link>
   );
   return (
-    <header className="sticky top-0 z-20 hidden border-b border-border bg-surface-card/95 backdrop-blur md:block">
+    <header className="sticky top-0 z-20 hidden border-b border-white/10 bg-[#08322e] md:block">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-8 py-3">
         <Link
           href="/dashboard"
-          className="flex items-center gap-2 text-base font-semibold text-fg"
+          className="flex items-center gap-2 text-base font-semibold text-white"
         >
-          <ShuttlecockIcon className="h-5 w-5 text-primary" />
+          <CourtIcon className="h-5 w-5 text-accent" />
           Badminton Split
         </Link>
         <nav className="flex items-center gap-1">

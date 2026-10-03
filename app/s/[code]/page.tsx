@@ -8,9 +8,9 @@ import { formatDateID, timeRange } from "../../../lib/format";
 import { api } from "../../../lib/api";
 import { createClient } from "../../../lib/supabase/client";
 import type { Session, User } from "../../../lib/types";
-import { AlertIcon, ArrowLeftIcon, CheckIcon, ClockIcon, QrIcon, ReceiptIcon, ShuttlecockIcon } from "../../../components/icons";
+import { AlertIcon, ArrowLeftIcon, QrIcon, ReceiptIcon, ShuttlecockIcon } from "../../../components/icons";
 import { QrImage } from "../../../components/QrImage";
-import { btnPrimary, cardCls } from "../../../components/ui";
+import { btnPrimary, cardCls, scoreCls } from "../../../components/ui";
 export default function JoinPage({
   params,
 }: {
@@ -79,8 +79,6 @@ function JoinBody({ code }: { code: string }) {
   const me = meId ? users.find((u) => u.id === meId) ?? null : null;
   const calc = calculateSession(session);
   const already = meId ? session.playerIds.includes(meId) : false;
-  const userName = (pid: string) =>
-    users.find((u) => u.id === pid)?.name ?? "?";
   // Tagihan orang yang membuka halaman ini, plus status lunasnya. Halaman
   // undangan boleh dibuka tanpa login, jadi keduanya `undefined`/`false`
   // untuk tamu — bukan syarat render.
@@ -104,7 +102,7 @@ function JoinBody({ code }: { code: string }) {
   };
 
   return (
-    <main className="py-10 md:py-16">
+    <main className="mx-auto w-full max-w-md py-10 md:py-16">
       <span className="inline-flex items-center gap-2 rounded-full border border-border bg-surface-card px-3 py-1 text-xs font-medium text-fg-muted">
         <ShuttlecockIcon className="h-4 w-4 text-primary" />
         Undangan Sesi
@@ -116,64 +114,81 @@ function JoinBody({ code }: { code: string }) {
         {formatDateID(session.date)} · {timeRange(session.startTime, session.endTime)} · {session.location}
       </p>
 
-      <div className="mt-5 rounded-lg bg-primary-bg p-4 text-sm">
-        <div className="flex justify-between">
-          <span className="text-fg-muted">Total biaya</span>
-          <span className="font-semibold text-fg">{formatIDR(calc.totalCost)}</span>
+      <section aria-label="Ringkasan sesi" className={`${cardCls} mt-5`}>
+        <div className="flex items-center justify-between gap-3 border-b border-border pb-3">
+          <span className="text-sm text-fg-muted">Total biaya</span>
+          <span className="text-lg font-semibold text-fg tabular-nums">{formatIDR(calc.totalCost)}</span>
         </div>
-        <div className="mt-1 flex justify-between">
-          <span className="text-fg-muted">Pemain</span>
-          <span className="font-medium text-fg">{session.playerIds.length} orang</span>
+        <div className="flex items-center justify-between gap-3 border-b border-border py-3">
+          <span className="text-sm text-fg-muted">Pemain</span>
+          <span className="text-sm font-medium text-fg tabular-nums">{session.playerIds.length} orang</span>
+        </div>
+        <div className="flex items-center justify-between gap-3 pt-3">
+          <span className="text-sm text-fg-muted">Status</span>
+          <span className="inline-flex items-center gap-2 text-sm font-medium text-fg capitalize">
+            <span
+              aria-hidden="true"
+              className={`h-2 w-2 shrink-0 rounded-full ${session.status === "active" ? "bg-success" : session.status === "upcoming" ? "bg-primary" : "bg-fg-subtle"}`}
+            />
+            {session.status}
+          </span>
         </div>
         <p className="mt-3 text-xs font-medium text-fg-muted">Pemain saat ini</p>
-        <p className="mt-1 text-sm text-fg">{session.playerIds.map(userName).join(", ")}</p>
-        <p className="mt-2 text-xs capitalize text-fg-subtle">Status: {session.status}</p>
-      </div>
+        <p className="mt-1 text-sm text-fg">{session.playerIds.map((pid) => users.find((u) => u.id === pid)?.name ?? "?").join(", ")}</p>
+      </section>
 
       {mine && (
-        <div className="mt-3 rounded-lg bg-primary p-5 text-on-solid">
+        <section
+          aria-label="Tagihanmu"
+          className={`${scoreCls} mt-3 p-5`}
+        >
           <div className="flex items-center justify-between gap-3">
-            <p className="text-sm font-medium">Tagihanmu</p>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-surface-card px-2.5 py-1 text-xs font-semibold text-fg">
-              {minePaid ? <CheckIcon className="h-4 w-4" /> : <ClockIcon className="h-4 w-4" />}
+            <p className="text-sm font-medium text-white/85">Tagihanmu</p>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-fg">
+              <span
+                aria-hidden="true"
+                className={`h-2 w-2 shrink-0 rounded-full ${minePaid ? "bg-success" : "bg-warning"}`}
+              />
               {minePaid ? "Lunas" : "Belum bayar"}
             </span>
           </div>
-          <p className="mt-1 text-4xl font-semibold tracking-tight">
+          <p key={mine.total} className="tnum animate-score-snap mt-1 text-4xl font-semibold tracking-tight">
             {formatIDR(mine.total)}
           </p>
-          <p className="mt-1 text-sm">
+          <p className="mt-1 text-sm text-white/80">
             {mine.court > 0 && `Lapangan ${formatIDR(mine.court)}`}
             {mine.shuttle > 0 && `${mine.court > 0 ? " · " : ""}Kok ${formatIDR(mine.shuttle)}`}
             {mine.additional > 0 && `${mine.court > 0 || mine.shuttle > 0 ? " · " : ""}Lain ${formatIDR(mine.additional)}`}
           </p>
-        </div>
+        </section>
       )}
 
-      <div className={`${cardCls} mt-3`}>
+      <section aria-label="Tagihan per orang" className={`${cardCls} mt-3`}>
         <p className="flex items-center gap-1.5 text-sm font-semibold text-fg">
           <ReceiptIcon className="h-5 w-5 text-primary" /> Tagihan per Orang
         </p>
-        <div className="mt-3 space-y-2">
+        <div className="mt-3 divide-y divide-border border-y border-border">
           {session.playerIds.map((pid) => {
             const share = calc.perPlayer[pid];
             const paid = session.payments[pid] === "paid";
             return (
               <div
                 key={pid}
-                className="flex items-center justify-between gap-3 border-b border-border pb-2 last:border-0 last:pb-0"
+                className="flex items-center justify-between gap-3 py-2"
               >
                 <span className="text-sm font-medium text-fg">
-                  {userName(pid)}
+                  {users.find((u) => u.id === pid)?.name ?? "?"}
                   {pid === meId && <span className="text-fg-subtle"> (kamu)</span>}
                 </span>
                 <span className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-fg">
+                  <span className="text-sm font-semibold text-fg tabular-nums">
                     {formatIDR(share?.total ?? 0)}
                   </span>
-                  <span className={paid ? "text-success" : "text-fg-subtle"}>
-                    {paid ? <CheckIcon className="h-4 w-4" /> : <ClockIcon className="h-4 w-4" />}
-                  </span>
+                  <span
+                    aria-hidden="true"
+                    className={`h-2 w-2 shrink-0 rounded-full ${paid ? "bg-success" : "bg-warning"}`}
+                  />
+                  <span className="sr-only">{paid ? "Lunas" : "Belum bayar"}</span>
                 </span>
               </div>
             );
@@ -188,7 +203,7 @@ function JoinBody({ code }: { code: string }) {
             </span>
           </p>
         )}
-      </div>
+      </section>
 
       {session.paymentQr ? (
         <div className={`${cardCls} mt-3`}>

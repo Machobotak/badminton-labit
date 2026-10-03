@@ -17,6 +17,7 @@ import {
   cardCls,
   pillCls,
   pillState,
+  scoreCls,
 } from "../../components/ui";
 
 const FILTERS: { id: SessionStatus | "all"; label: string }[] = [
@@ -25,6 +26,12 @@ const FILTERS: { id: SessionStatus | "all"; label: string }[] = [
   { id: "active", label: "Active" },
   { id: "completed", label: "Completed" },
 ];
+
+const STATUS_LAMP: Record<SessionStatus, string> = {
+  active: "bg-success",
+  completed: "bg-fg-subtle",
+  upcoming: "bg-primary",
+};
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -55,6 +62,14 @@ export default function DashboardPage() {
   const sessions =
     data?.sessions.filter((s) => filter === "all" || s.status === filter) ?? [];
 
+  const totalMine = (() => {
+    if (!data || !me) return 0;
+    return sessions.reduce(
+      (sum, s) => sum + (calculateSession(s).perPlayer[me.id]?.total ?? 0),
+      0,
+    );
+  })();
+
   if (error) {
     return (
       <main className="py-10">
@@ -79,21 +94,38 @@ export default function DashboardPage() {
 
   return (
     <main className="py-6 md:py-10">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-sm text-fg-muted">
-            {greeting()},{" "}
-            <span className="font-semibold text-fg">{me.name}</span>
-          </p>
-          <h1 className="text-xl font-semibold tracking-tight text-fg">
-            Sesi Badmintonmu
-          </h1>
+      <section className={`${scoreCls} p-5`}>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-sm text-white/80">
+              {greeting()},{" "}
+              <span className="font-semibold text-white">{me.name}</span>
+            </p>
+            <h1 className="mt-0.5 text-xl font-semibold tracking-tight">
+              Sesi Badmintonmu
+            </h1>
+          </div>
+          <Link href="/sessions/new" className={`${btnPrimary} shrink-0`}>
+            <PlusIcon className="h-4 w-4" />
+            Buat Sesi
+          </Link>
         </div>
-        <Link href="/sessions/new" className={`${btnPrimary} shrink-0`}>
-          <PlusIcon className="h-4 w-4" />
-          Buat Sesi
-        </Link>
-      </div>
+        <div
+          aria-hidden="true"
+          className="my-4 border-t border-white/20"
+        />
+        <div className="flex flex-wrap items-end justify-between gap-2">
+          <p className="text-xs font-medium text-white/80">
+            Total tagihanmu di filter ini
+          </p>
+          <p key={totalMine} className="tnum animate-score-snap text-3xl font-semibold tracking-tight">
+            {formatIDR(totalMine)}
+          </p>
+        </div>
+        <p className="mt-1 text-xs text-white/70">
+          {sessions.length} sesi
+        </p>
+      </section>
 
       <div className="mt-5 flex gap-2 overflow-x-auto pb-1">
         {FILTERS.map((f) => (
@@ -108,7 +140,7 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div className="mt-4 space-y-2">
         {sessions.length === 0 && (
           <div className="rounded-lg border border-dashed border-border-strong bg-surface-card p-6 text-center text-sm text-fg-subtle">
             Belum ada sesi di filter ini. Yuk buat sesi pertamamu!
@@ -118,56 +150,52 @@ export default function DashboardPage() {
           const calc = calculateSession(s);
           const paid = s.playerIds.filter((p) => s.payments[p] === "paid").length;
           const mine = me ? (calc.perPlayer[me.id]?.total ?? 0) : 0;
-          const statusClass =
-            s.status === "completed"
-              ? "bg-neutral-bg text-primary-dark"
-              : s.status === "active"
-                ? "bg-primary-bg text-primary-dark"
-                : "bg-accent-light text-accent-dark";
           return (
-            <Link key={s.id} href={`/sessions/${s.id}`} className={`press ${cardCls}`}>
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <p className="truncate font-semibold text-fg">{s.name}</p>
-                  <p className="mt-1 text-xs text-fg-muted">
-                    {formatDateID(s.date)} · {timeRange(s.startTime, s.endTime)}
-                  </p>
-                  <p className="mt-0.5 text-xs text-fg-muted">
-                    {s.playerIds.length} pemain · {paid}/{s.playerIds.length} lunas
-                  </p>
-                </div>
-                <span className={`${badgeCls} ${statusClass}`}>{s.status}</span>
-              </div>
-              <div className="mt-3 flex items-center justify-between gap-2 border-t border-border pt-3 text-sm">
-                <span className="text-fg-muted">
-                  Total{" "}
-                  <span className="font-semibold text-fg">
-                    {formatIDR(calc.totalCost)}
+            <Link
+              key={s.id}
+              href={`/sessions/${s.id}`}
+              className={`press ${cardCls} flex items-center gap-3 py-3`}
+            >
+              <span
+                aria-hidden="true"
+                className={`h-2.5 w-2.5 shrink-0 rounded-full ${STATUS_LAMP[s.status]}`}
+              />
+              <span className="min-w-0 flex-1">
+                <span className="flex flex-wrap items-center gap-2">
+                  <span className="truncate font-semibold text-fg">{s.name}</span>
+                  <span className={`${badgeCls} bg-neutral-bg text-fg-muted`}>
+                    {s.status}
                   </span>
                 </span>
-                <span className="flex items-center gap-1.5 text-fg-muted">
-                  <span className="font-medium">Tagihanmu</span>
-                  <span className="font-semibold text-primary">
-                    {formatIDR(mine)}
-                  </span>
-                  {s.creatorId === me.id && (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setDeleteError("");
-                        setPendingDelete({ id: s.id, name: s.name });
-                      }}
-                      aria-label={`Hapus sesi ${s.name}`}
-                      title="Hapus sesi"
-                      className={`btn-delete ${btnIcon} -mr-1.5`}
-                    >
-                      <XIcon className="h-4 w-4" />
-                    </button>
-                  )}
+                <span className="mt-1 block text-xs text-fg-muted">
+                  {formatDateID(s.date)} · {timeRange(s.startTime, s.endTime)}
                 </span>
-              </div>
+                <span className="mt-0.5 block text-xs text-fg-muted">
+                  {paid}/{s.playerIds.length} lunas · Total {formatIDR(calc.totalCost)}
+                </span>
+              </span>
+              <span className="shrink-0 text-right">
+                <span className="tabular-nums block text-lg font-semibold text-fg">
+                  {formatIDR(mine)}
+                </span>
+                <span className="mt-0.5 block text-xs text-fg-muted">tagihanmu</span>
+              </span>
+              {s.creatorId === me.id && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setDeleteError("");
+                    setPendingDelete({ id: s.id, name: s.name });
+                  }}
+                  aria-label={`Hapus sesi ${s.name}`}
+                  title="Hapus sesi"
+                  className={`btn-delete ${btnIcon} -mr-1.5`}
+                >
+                  <XIcon className="h-4 w-4" />
+                </button>
+              )}
             </Link>
           );
         })}

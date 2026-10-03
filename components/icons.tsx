@@ -205,3 +205,13 @@ export function DownloadIcon(props: IconProps) {
     </Icon>
   );
 }
+
+export function CourtIcon(props: IconProps) {
+  return (
+    <Icon {...props} strokeWidth={1.8}>
+      <rect x="6" y="3" width="12" height="18" rx="1" />
+      <path d="M6 12h12" />
+      <path d="M12 3v18" />
+    </Icon>
+  );
+}

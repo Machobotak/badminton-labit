@@ -26,6 +26,7 @@ import {
   inputCompactCls,
   pillCls,
   pillState,
+  scoreCls,
 } from "../../../components/ui";
 const TABS = [
   "overview",
@@ -387,9 +388,10 @@ function DetailBody({ id }: { id: string }) {
         <ArrowLeftIcon className="h-4 w-4" /> Dashboard
       </Link>
 
-      <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
+      <div className={`${cardCls} mt-3 flex flex-wrap items-center justify-between gap-3`}>
+        <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
+            <span aria-hidden="true" className={`h-2.5 w-2.5 shrink-0 rounded-full ${session.status === "active" ? "bg-success" : session.status === "completed" ? "bg-fg-subtle" : "bg-primary"}`} />
             <h1 className="text-2xl font-semibold tracking-tight text-fg">
               {session.name}
             </h1>
@@ -437,20 +439,22 @@ function DetailBody({ id }: { id: string }) {
 
       {active === "overview" && calc && (
         <div className="mt-4 space-y-3">
-          <div className="rounded-lg bg-primary p-5 text-on-solid">
-            <p className="text-xs font-medium">Tagihanmu</p>
-            <p className="mt-1 text-4xl font-semibold tracking-tight">
+          <div className={`${scoreCls} p-5`}>
+            <p className="text-xs font-medium text-white/80">Tagihanmu</p>
+            <p key={mine?.total ?? 0} className="tnum animate-score-snap mt-1 text-4xl font-semibold tracking-tight">
               {mine ? formatIDR(mine.total) : formatIDR(0)}
             </p>
-            <div className="mt-2 flex flex-wrap gap-x-2 gap-y-1 text-xs">
+            <div className="mt-2 flex flex-wrap gap-x-2 gap-y-1 text-xs text-white/80">
               <span>Total {formatIDR(calc.totalCost)}</span>
               <span aria-hidden="true">·</span>
               <span>{session.playerIds.length} pemain</span>
               <span aria-hidden="true">·</span>
               <span>{paidCount}/{session.playerIds.length} lunas</span>
             </div>
-            <div className="mt-1 text-xs">
-              Terkumpul {formatIDR(collected)} · Sisa {formatIDR(calc.allocatedTotal - collected)}
+            <div className="my-3 border-t border-white/20" aria-hidden="true" />
+            <div className="flex flex-wrap justify-between gap-2 text-xs text-white/80">
+              <span>Terkumpul {formatIDR(collected)}</span>
+              <span>Sisa {formatIDR(calc.allocatedTotal - collected)}</span>
             </div>
           </div>
 
@@ -475,7 +479,8 @@ function DetailBody({ id }: { id: string }) {
                       aria-expanded={open}
                       className="press flex w-full items-center justify-between gap-3 rounded-lg px-4 py-3.5 text-sm hover:bg-neutral-bg"
                     >
-                      <span className="inline-flex min-w-0 items-center gap-1.5">
+                      <span className="inline-flex min-w-0 items-center gap-2">
+                        <span aria-hidden="true" className={`h-2 w-2 shrink-0 rounded-full ${session.payments[pid] === "paid" ? "bg-success" : "bg-accent"}`} />
                         <span className="truncate font-semibold text-fg">
                           {userName(pid)}
                           {pid === me.id ? " (kamu)" : ""}
@@ -486,12 +491,12 @@ function DetailBody({ id }: { id: string }) {
                           <ClockIcon className="h-4 w-4 shrink-0 text-fg-subtle" />
                         )}
                       </span>
-                      <span className="shrink-0 font-semibold text-fg">
+                      <span className="shrink-0 font-semibold tabular-nums text-fg">
                         {formatIDR(p?.total ?? 0)}
                       </span>
                     </button>
                     {open && p && (
-                      <div className="space-y-0.5 border-t border-border px-4 py-2.5 text-xs text-fg-muted">
+                      <div className="space-y-0.5 border-t border-border px-4 py-2.5 text-xs tabular-nums text-fg-muted">
                         <div className="flex justify-between"><span>Lapangan</span><span>{formatIDR(p.court)}</span></div>
                         <div className="flex justify-between"><span>Kok</span><span>{formatIDR(p.shuttle)}</span></div>
                         <div className="flex justify-between"><span>Biaya lain</span><span>{formatIDR(p.additional)}</span></div>
@@ -504,7 +509,7 @@ function DetailBody({ id }: { id: string }) {
           )}
           {calc.unallocated > 0 && (
             <p className="flex items-start gap-1.5 rounded-lg bg-accent-light px-3 py-2 text-xs text-accent-dark">
-              <AlertIcon className="h-4 w-4 shrink-0" /> <span>{formatIDR(calc.unallocated)} belum terbagi — ada lapangan/kok tanpa pemain.</span>
+              <AlertIcon className="h-4 w-4 shrink-0" /> <span className="tabular-nums">{formatIDR(calc.unallocated)} belum terbagi — ada lapangan/kok tanpa pemain.</span>
             </p>
           )}
         </div>
@@ -512,7 +517,7 @@ function DetailBody({ id }: { id: string }) {
 
       {active === "players" && (
         <div className="mt-4">
-          <div className="flex flex-wrap gap-2">
+          <div className={`${cardCls} flex flex-wrap gap-2`}>
             <input
               value={newPlayer}
               onChange={(e) => setNewPlayer(e.target.value)}
@@ -527,7 +532,7 @@ function DetailBody({ id }: { id: string }) {
               <div key={pid} className={`${cardCls} animate-row-in flex items-center justify-between gap-3 py-3 text-sm`}>
                 <span className="min-w-0 truncate font-medium text-fg">
                   {userName(pid)}{" "}
-                  <span className="text-fg-muted">
+                  <span className="tabular-nums text-fg-muted">
                     {formatIDR(calc?.perPlayer[pid]?.total ?? 0)}
                   </span>
                 </span>
@@ -548,7 +553,7 @@ function DetailBody({ id }: { id: string }) {
 
       {active === "courts" && (
         <div className="mt-4">
-          <div className="flex flex-wrap gap-2">
+          <div className={`${cardCls} flex flex-wrap gap-2`}>
             <input value={newCourtName} onChange={(e) => setNewCourtName(e.target.value)} placeholder="Nama lapangan" className={`${inputCls} min-w-40 flex-1`} />
             <input value={newCourtPrice} onChange={(e) => setNewCourtPrice(e.target.value)} placeholder="Harga" inputMode="numeric" className={`${inputCls} sm:w-32`} />
             <button
@@ -603,7 +608,7 @@ function DetailBody({ id }: { id: string }) {
                     </span>
                   ) : (
                     <span className="flex shrink-0 items-center gap-1.5">
-                      <span className="font-medium text-fg">{formatIDR(c.price)}</span>
+                      <span className="font-medium tabular-nums text-fg">{formatIDR(c.price)}</span>
                       <button
                         onClick={() => { setEditingPrice(c.id); setPriceDraft(String(c.price)); }}
                         className="press rounded-lg px-1.5 py-1 text-xs font-medium text-fg-subtle hover:text-fg"
@@ -632,7 +637,7 @@ function DetailBody({ id }: { id: string }) {
 
       {active === "shuttlecocks" && (
         <div className="mt-4">
-          <div className="flex flex-wrap gap-2">
+          <div className={`${cardCls} flex flex-wrap gap-2`}>
             <input value={newKokName} onChange={(e) => setNewKokName(e.target.value)} placeholder="Nama kok" className={`${inputCls} min-w-40 flex-1`} />
             <input value={newKokPackPrice} onChange={(e) => setNewKokPackPrice(e.target.value)} placeholder="Harga 1 slope" inputMode="numeric" className={`${inputCls} sm:w-36`} />
             <input value={newKokPackSize} onChange={(e) => setNewKokPackSize(e.target.value)} placeholder="Isi" inputMode="numeric" className={`${inputCls} sm:w-20`} aria-label="Isi satu slope" />
@@ -713,7 +718,7 @@ function DetailBody({ id }: { id: string }) {
                       </span>
                     ) : (
                       <span className="flex shrink-0 items-center gap-1.5">
-                        <span className="font-medium text-fg">
+                        <span className="font-medium tabular-nums text-fg">
                           {formatIDR(k.packPrice)}/slope isi {k.packSize} = {formatIDR(Math.round(shuttleUnitPrice(k)))}/butir
                         </span>
                         <button
@@ -745,7 +750,7 @@ function DetailBody({ id }: { id: string }) {
                       >
                         −
                       </button>
-                      <span className="min-w-14 text-center font-semibold text-fg">{k.used} butir</span>
+                      <span className="min-w-14 text-center font-semibold tabular-nums text-fg">{k.used} butir</span>
                       <button
                         onClick={() => bumpKokUsed(k.id, 1)}
                         className="press h-7 w-7 rounded-full bg-surface-card font-semibold text-fg hover:bg-neutral-bg"
@@ -754,7 +759,7 @@ function DetailBody({ id }: { id: string }) {
                         +
                       </button>
                     </span>
-                    <span className="text-fg-muted">
+                    <span className="tabular-nums text-fg-muted">
                       = <span className="font-medium text-fg">{formatIDR(cost)}</span>
                       {k.playerIds.length > 0 && <> · ≈{formatIDR(perHead)}/orang ({k.playerIds.length} pemain)</>}
                     </span>
@@ -879,7 +884,7 @@ function DetailBody({ id }: { id: string }) {
                       </span>
                     </span>
                     <span className="flex shrink-0 items-center gap-1.5">
-                      <span className="font-medium text-fg">{formatIDR(a.amount)}</span>
+                      <span className="font-medium tabular-nums text-fg">{formatIDR(a.amount)}</span>
                       <button
                         onClick={() => {
                           setEditingAdd(a.id);
@@ -914,8 +919,8 @@ function DetailBody({ id }: { id: string }) {
       {active === "payments" && calc && (
         <div className="mt-4">
           <div className="rounded-lg border border-border bg-primary-bg p-4 text-sm">
-            <div className="flex justify-between"><span className="text-fg-muted">Terkumpul</span><span className="font-semibold text-primary">{formatIDR(collected)}</span></div>
-            <div className="flex justify-between"><span className="text-fg-muted">Sisa</span><span className="font-semibold text-fg">{formatIDR(calc.allocatedTotal - collected)}</span></div>
+            <div className="flex justify-between"><span className="text-fg-muted">Terkumpul</span><span className="font-semibold tabular-nums text-primary">{formatIDR(collected)}</span></div>
+            <div className="flex justify-between"><span className="text-fg-muted">Sisa</span><span className="font-semibold tabular-nums text-fg">{formatIDR(calc.allocatedTotal - collected)}</span></div>
             <p className="mt-1 text-xs text-fg-muted">{paidCount}/{session.playerIds.length} lunas</p>
           </div>
           <div className={`${cardCls} mt-3`}>
@@ -963,9 +968,12 @@ function DetailBody({ id }: { id: string }) {
                   aria-pressed={paid}
                   className={`${cardCls} press flex w-full items-center justify-between gap-3 py-3 text-left text-sm`}
                 >
-                  <span className="min-w-0 truncate font-medium text-fg">{userName(pid)}</span>
+                  <span className="inline-flex min-w-0 items-center gap-2">
+                    <span aria-hidden="true" className={`h-2 w-2 shrink-0 rounded-full ${paid ? "bg-success" : "bg-accent"}`} />
+                    <span className="truncate font-medium text-fg">{userName(pid)}</span>
+                  </span>
                   <span className="flex shrink-0 items-center gap-2">
-                    <span className="text-fg-muted">{formatIDR(calc.perPlayer[pid]?.total ?? 0)}</span>
+                    <span className="tabular-nums text-fg-muted">{formatIDR(calc.perPlayer[pid]?.total ?? 0)}</span>
                     <span className={paid ? "text-success" : "text-fg-subtle"}>
                       {paid ? <CheckIcon className="h-5 w-5" /> : <ClockIcon className="h-5 w-5" />}
                     </span>

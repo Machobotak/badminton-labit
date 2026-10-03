@@ -1,9 +1,9 @@
 export function greeting(): string {
   const h = new Date().getHours();
-  if (h < 11) return "Good morning";
-  if (h < 15) return "Good afternoon";
-  if (h < 19) return "Good evening";
-  return "Good night";
+  if (h < 11) return "Selamat pagi";
+  if (h < 15) return "Selamat siang";
+  if (h < 19) return "Selamat sore";
+  return "Selamat malam";
 }
 
 export function formatDateID(dateStr: string): string {

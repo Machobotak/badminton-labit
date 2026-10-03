@@ -17,6 +17,7 @@ import {
   cardCls,
   inputCls,
   labelCls,
+  scoreCls,
 } from "../../../components/ui";
 const STEPS = ["Info", "Lapangan", "Pemain", "Kok", "Biaya Lain", "Review"] as const;
 
@@ -289,7 +290,7 @@ export default function NewSessionPage() {
 
   return (
     <main className="py-6 md:py-10">
-      <h1 className="text-2xl font-semibold tracking-tight text-fg">
+      <h1 className="text-xl font-semibold tracking-tight text-fg">
         Buat Sesi Baru
       </h1>
       <div className="mt-4 flex gap-1.5">
@@ -298,8 +299,8 @@ export default function NewSessionPage() {
             key={s}
             onClick={() => i < step && setStep(i)}
             aria-label={s}
-            className={`h-1.5 flex-1 rounded-full transition-colors ${
-              i <= step ? "bg-primary" : "bg-neutral-bg"
+            className={`h-2 flex-1 rounded-full ${
+              i < step ? "bg-success" : i === step ? "bg-accent" : "bg-neutral-bg"
             }`}
           />
         ))}
@@ -307,7 +308,6 @@ export default function NewSessionPage() {
       <p className="mt-2 text-sm text-fg-muted">
         Langkah {step + 1} dari {STEPS.length}: {STEPS[step]}
       </p>
-
       {error && (
         <p className="mt-3 rounded-lg bg-feedback-bg px-3 py-2 text-sm text-error">
           {error}
@@ -316,7 +316,7 @@ export default function NewSessionPage() {
 
       <div className="mt-4">
         {step === 0 && (
-          <div className="space-y-3">
+          <div className={`${cardCls} space-y-3`}>
             <div>
               <label className={labelCls} htmlFor="w-name">Nama sesi *</label>
               <input id="w-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="cth. Badminton Jumat Malam" className={`${inputCls} mt-1.5`} />
@@ -348,7 +348,7 @@ export default function NewSessionPage() {
 
         {step === 1 && (
           <div>
-            <div className="flex flex-wrap gap-2">
+            <div className={`${cardCls} flex flex-wrap gap-2`}>
               <input value={courtName} onChange={(e) => setCourtName(e.target.value)} placeholder="Nama lapangan" className={`${inputCls} min-w-40 flex-1`} />
               <input value={courtPrice} onChange={(e) => setCourtPrice(e.target.value)} placeholder="Harga" inputMode="numeric" className={`${inputCls} sm:w-32`} />
               <button onClick={addCourt} className={btnAdd} aria-label="Tambah lapangan"><PlusIcon className="h-4 w-4" /></button>
@@ -358,7 +358,7 @@ export default function NewSessionPage() {
                 <div key={c.id} className={`${cardCls} animate-row-in flex items-center justify-between gap-3 py-3 text-sm`}>
                   <span className="truncate font-medium text-fg">{c.name}</span>
                   <span className="flex shrink-0 items-center gap-1.5">
-                    <span className="font-medium text-fg">{formatIDR(c.price)}</span>
+                    <span className="font-semibold tabular-nums text-fg">{formatIDR(c.price)}</span>
                     <button onClick={() => setCourts((cs) => cs.filter((x) => x.id !== c.id))} className={`${btnIcon} h-8 w-8 hover:bg-feedback-bg hover:text-error`} aria-label="Hapus lapangan"><XIcon className="h-4 w-4" /></button>
                   </span>
                 </div>
@@ -370,7 +370,7 @@ export default function NewSessionPage() {
 
         {step === 2 && (
           <div>
-            <div className="flex flex-wrap gap-2">
+            <div className={`${cardCls} flex flex-wrap gap-2`}>
               <input value={playerName} onChange={(e) => setPlayerName(e.target.value)} placeholder="Nama pemain" className={`${inputCls} min-w-40 flex-1`} onKeyDown={(e) => { if (e.key === "Enter") addPlayer(); }} />
               <button onClick={addPlayer} className={btnAdd} aria-label="Tambah pemain"><PlusIcon className="h-4 w-4" /></button>
             </div>
@@ -389,7 +389,7 @@ export default function NewSessionPage() {
 
         {step === 3 && (
           <div>
-            <div className="flex flex-wrap gap-2">
+            <div className={`${cardCls} flex flex-wrap gap-2`}>
               <input value={shuttleName} onChange={(e) => setShuttleName(e.target.value)} placeholder="Nama kok" className={`${inputCls} min-w-40 flex-1`} />
               <input value={shuttlePrice} onChange={(e) => setShuttlePrice(e.target.value)} placeholder="Harga 1 slope" inputMode="numeric" className={`${inputCls} sm:w-36`} />
               <input value={shuttleSize} onChange={(e) => setShuttleSize(e.target.value)} placeholder="Isi" inputMode="numeric" className={`${inputCls} sm:w-20`} aria-label="Isi satu slope" />
@@ -403,7 +403,7 @@ export default function NewSessionPage() {
                 <div key={k.id} className={`${cardCls} animate-row-in flex items-center justify-between gap-3 py-3 text-sm`}>
                   <span className="min-w-0 truncate font-medium text-fg">
                     {k.name}
-                    <span className="ml-1.5 text-xs font-normal text-fg-muted">
+                    <span className="ml-1.5 text-xs font-normal tabular-nums text-fg-muted">
                       {formatIDR(k.packPrice)}/slope · isi {k.packSize} butir → {formatIDR(Math.round(k.packPrice / k.packSize))}/butir
                     </span>
                   </span>
@@ -432,7 +432,7 @@ export default function NewSessionPage() {
                 <div key={a.id} className={`${cardCls} animate-row-in flex items-center justify-between gap-3 py-3 text-sm`}>
                   <span className="min-w-0 truncate font-medium text-fg">{a.name} <span className="font-normal text-fg-muted">· {a.category}</span></span>
                   <span className="flex shrink-0 items-center gap-1.5">
-                    <span className="font-medium text-fg">{formatIDR(a.amount)}</span>
+                    <span className="font-medium tabular-nums text-fg">{formatIDR(a.amount)}</span>
                     <button onClick={() => setAdds((xs) => xs.filter((x) => x.id !== a.id))} className={`${btnIcon} h-8 w-8 hover:bg-feedback-bg hover:text-error`} aria-label="Hapus biaya"><XIcon className="h-4 w-4" /></button>
                   </span>
                 </div>
@@ -444,20 +444,20 @@ export default function NewSessionPage() {
 
         {step === 5 && (
           <div>
-            <div className="rounded-lg bg-primary-bg p-4">
-              <p className="font-semibold text-fg">{name || "(tanpa nama)"}</p>
-              <p className="mt-0.5 text-xs text-fg-muted">{date} · {startTime}–{endTime} · {location || "-"}</p>
-              <div className="mt-3 space-y-1.5 text-sm">
-                <div className="flex justify-between"><span className="text-fg-muted">Total biaya</span><span className="font-semibold text-fg">{formatIDR(calc.totalCost)}</span></div>
-                <div className="flex justify-between"><span className="text-fg-muted">{players.length} pemain</span><span className="font-medium text-fg">{players.length > 0 ? formatIDR(Math.round(calc.totalCost / players.length)) + " rata-rata/orang" : "-"}</span></div>
-              </div>
-              {calc.unallocated > 0 && <p className="mt-3 flex items-start gap-1.5 rounded-lg bg-accent-light px-2.5 py-2 text-xs text-accent-dark"><AlertIcon className="h-4 w-4 shrink-0" /> <span>{formatIDR(calc.unallocated)} belum terbagi — tambahkan pemain dulu agar bisa dihitung per orang.</span></p>}
+            <div className={`${scoreCls} p-5`}>
+              <p className="font-semibold">{name || "(tanpa nama)"}</p>
+              <p className="mt-0.5 text-xs text-white/75">{date} · {startTime}–{endTime} · {location || "-"}</p>
+              <div aria-hidden="true" className="my-4 border-t border-white/20" />
+              <p className="text-xs font-medium text-white/80">Total biaya</p>
+              <p key={calc.totalCost} className="tnum animate-score-snap mt-0.5 text-4xl font-semibold tracking-tight">{formatIDR(calc.totalCost)}</p>
+              <p className="mt-2 text-xs text-white/80">{players.length} pemain · {players.length > 0 ? `${formatIDR(Math.round(calc.totalCost / players.length))} rata-rata/orang` : "-"}</p>
+              {calc.unallocated > 0 && <p className="mt-3 flex items-start gap-1.5 rounded-lg bg-accent-light px-2.5 py-2 text-xs text-accent-dark"><AlertIcon className="h-4 w-4 shrink-0" /> <span className="tabular-nums">{formatIDR(calc.unallocated)} belum terbagi — tambahkan pemain dulu agar bisa dihitung per orang.</span></p>}
             </div>
             <div className="mt-3 space-y-1.5">
               {players.map((p, i) => (
                 <div key={i} className="flex justify-between gap-3 rounded-lg border border-border bg-surface-card px-3 py-2 text-sm">
                   <span className="truncate text-fg">{p}</span>
-                  <span className="shrink-0 font-semibold text-fg">{formatIDR(calc.perPlayer[`draft-p${i}`]?.total ?? 0)}</span>
+                  <span className="shrink-0 font-semibold tabular-nums text-fg">{formatIDR(calc.perPlayer[`draft-p${i}`]?.total ?? 0)}</span>
                 </div>
               ))}
               {players.length === 0 && <p className="text-sm text-fg-subtle">Tambahkan minimal satu pemain untuk menghitung tagihan.</p>}

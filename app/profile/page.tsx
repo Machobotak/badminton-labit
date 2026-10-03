@@ -43,7 +43,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <main className="py-6 md:py-10">
+    <main className="mx-auto w-full max-w-sm py-6 md:py-10">
       <h1 className="text-xl font-semibold tracking-tight text-fg">Profil</h1>
 
       <div className={`mt-4 ${cardCls}`}>
@@ -61,7 +61,7 @@ export default function ProfilePage() {
 
         {editing ? (
           <form
-            className="mt-4 flex flex-col gap-2 sm:flex-row"
+            className="mt-4 flex flex-col gap-2 border-t border-border pt-4 sm:flex-row"
             onSubmit={(e) => {
               e.preventDefault();
               void saveName();

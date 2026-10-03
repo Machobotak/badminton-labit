@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { createClient } from "../../lib/supabase/client";
 import { ShuttlecockIcon } from "../../components/icons";
-import { btnPrimary, inputCls, labelCls } from "../../components/ui";
+import { btnPrimary, cardCls, inputCls, labelCls } from "../../components/ui";
 
 function RegisterForm() {
   const router = useRouter();
@@ -63,72 +63,80 @@ function RegisterForm() {
   };
 
   return (
-    <main className="py-10 md:py-16">
-      <span className="inline-flex items-center gap-2 rounded-full border border-border bg-surface-card px-3 py-1 text-xs font-medium text-fg-muted">
-        <ShuttlecockIcon className="h-4 w-4 text-primary" />
-        Badminton Split
-      </span>
-      <h1 className="mt-4 text-2xl font-semibold tracking-tight text-fg">Daftar</h1>
-      <p className="mt-1 text-sm text-fg-muted">
-        Buat akun untuk mulai mencatat sesi badminton.
-      </p>
-      <form onSubmit={submit} className="mt-6 space-y-4">
-        <div>
-          <label className={labelCls} htmlFor="reg-name">
-            Nama
-          </label>
-          <input
-            id="reg-name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="cth. Rina"
-            className={`${inputCls} mt-1.5`}
-          />
+    <main className="mx-auto w-full max-w-sm py-10 md:py-16">
+      <div className={cardCls}>
+        <div className="flex items-center gap-3 border-b border-border pb-3">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-bg">
+            <ShuttlecockIcon className="h-5 w-5 text-primary" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-fg">Badminton Split</p>
+            <p className="truncate text-xs text-fg-muted">
+              Buat akun untuk mulai mencatat sesi badminton.
+            </p>
+          </div>
         </div>
-        <div>
-          <label className={labelCls} htmlFor="reg-email">
-            Email
-          </label>
-          <input
-            id="reg-email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="cth. rina@example.com"
-            className={`${inputCls} mt-1.5`}
-          />
-        </div>
-        <div>
-          <label className={labelCls} htmlFor="reg-pass">
-            Password
-          </label>
-          <input
-            id="reg-pass"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="minimal 6 karakter"
-            className={`${inputCls} mt-1.5`}
-          />
-        </div>
-        {error && (
-          <p className="rounded-lg bg-feedback-bg px-3 py-2 text-sm text-error">
-            {error}
-          </p>
-        )}
-        {notice && (
-          <p className="rounded-lg bg-success-bg px-3 py-2 text-sm text-success">
-            {notice}
-          </p>
-        )}
-        <button
-          type="submit"
-          disabled={busy}
-          className={`${btnPrimary} w-full`}
-        >
-          {busy ? "Memproses…" : "Buat akun"}
-        </button>
-      </form>
+
+        <h1 className="mt-4 text-2xl font-semibold tracking-tight text-fg">Daftar</h1>
+
+        <form onSubmit={submit} className="mt-4 space-y-4">
+          <div>
+            <label className={labelCls} htmlFor="reg-name">
+              Nama
+            </label>
+            <input
+              id="reg-name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="cth. Rina"
+              className={`${inputCls} mt-1.5`}
+            />
+          </div>
+          <div>
+            <label className={labelCls} htmlFor="reg-email">
+              Email
+            </label>
+            <input
+              id="reg-email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="cth. rina@example.com"
+              className={`${inputCls} mt-1.5`}
+            />
+          </div>
+          <div>
+            <label className={labelCls} htmlFor="reg-pass">
+              Password
+            </label>
+            <input
+              id="reg-pass"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="minimal 6 karakter"
+              className={`${inputCls} mt-1.5`}
+            />
+          </div>
+          {error && (
+            <p className="rounded-lg bg-feedback-bg px-3 py-2 text-sm text-error">
+              {error}
+            </p>
+          )}
+          {notice && (
+            <p className="rounded-lg bg-success-bg px-3 py-2 text-sm text-success">
+              {notice}
+            </p>
+          )}
+          <button
+            type="submit"
+            disabled={busy}
+            className={`${btnPrimary} w-full`}
+          >
+            {busy ? "Memproses…" : "Buat akun"}
+          </button>
+        </form>
+      </div>
       <p className="mt-6 text-center text-sm text-fg-muted">
         Sudah punya akun?{" "}
         <Link href="/login" className="font-semibold text-primary hover:underline">
